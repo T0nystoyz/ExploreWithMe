@@ -20,9 +20,9 @@ services:
     volumes:
       - /var/lib/postgresql/data/
     environment:
-      - POSTGRES_DB=stats-server
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=stats-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
 
   ewm-service:
     build: ./main_server
@@ -47,6 +47,6 @@ services:
     volumes:
       - /var/lib/postgresql/data/
     environment:
-      - POSTGRES_DB=main-server
+      - POSTGRES_DB=main-db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
