@@ -14,6 +14,7 @@ import ru.practicum.main_server.service.public_service.PublicCategoryService;
 import javax.persistence.EntityNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 @Slf4j
 @SpringBootTest
 @Transactional
@@ -25,6 +26,7 @@ class AdminCategoryServiceTest {
     PublicCategoryService pubService;
     @Autowired
     AdminCategoryService admService;
+
     @Test
     void delete() {
         CategoryDto cat = admService.createCategory(new NewCategoryDto("UNNAMED"));

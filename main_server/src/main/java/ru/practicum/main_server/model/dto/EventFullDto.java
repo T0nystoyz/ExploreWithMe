@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import ru.practicum.main_server.model.Location;
+
 @Builder
 @Getter
 @Setter
