@@ -56,6 +56,7 @@ public class AdminEventService {
     }
 
     public EventFullDto updateEvent(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
+        checkEventInDb(eventId);
         Event event = getEventFromAdminRequest(eventId, adminUpdateEventRequest);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
@@ -76,7 +77,7 @@ public class AdminEventService {
         event.setState(State.PUBLISHED);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
-        return setConfirmedRequestsAndViews(eventFullDto);
+        return eventFullDto;
     }
 
     public EventFullDto rejectEvent(Long eventId) {
@@ -86,7 +87,7 @@ public class AdminEventService {
         event = eventRepository.save(event);
         //EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         log.info("AdminEventService: отклонение события с id={}", eventId);
-        return setConfirmedRequestsAndViews(EventMapper.toEventFullDto(event));
+        return EventMapper.toEventFullDto(event);
     }
 
     /**
