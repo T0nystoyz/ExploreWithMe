@@ -19,7 +19,7 @@ import java.net.URLEncoder;
 public class StatisticClient extends BaseClient {
 
     @Autowired
-    public StatisticClient(@Value("${STAT_SERVER_URL}") String serverUrl, RestTemplateBuilder builder) {
+    public StatisticClient(@Value("${statistics.url}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
