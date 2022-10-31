@@ -83,7 +83,7 @@ public class PrivateEventService {
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         log.info("PrivateEventService: создано событие с именем {}", newEventDto.getTitle());
-        return setConfirmedRequestsAndViewsEventFullDto(eventFullDto);
+        return eventFullDto;
     }
 
     public EventFullDto readEvent(Long userId, Long eventId) {
