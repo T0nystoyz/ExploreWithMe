@@ -67,6 +67,7 @@ public class ErrorHandlingControllerAdvice {
         return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
     }
 
+    @ResponseBody()
     @ExceptionHandler(InternalServerErrorException.class)
     public ResponseEntity<ApiError> handleException500(InternalServerErrorException e) {
         ApiError apiError = new ApiError();

@@ -49,7 +49,7 @@ public class EventMapper {
         return Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .description(newEventDto.getDescription())
-                .eventDate(LocalDateTime.parse(newEventDto.getEventDate(),
+                .eventDate(LocalDateTime.parse(newEventDto.getEventDate().replace("T", " "),
                         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .paid(newEventDto.isPaid())
                 .participantLimit(newEventDto.getParticipantLimit())
