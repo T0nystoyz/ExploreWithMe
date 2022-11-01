@@ -1,5 +1,6 @@
 package ru.practicum.main_server.client;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -7,14 +8,13 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
-
+@Slf4j
 public class BaseClient {
     protected final RestTemplate rest;
 
     public BaseClient(RestTemplate rest) {
         this.rest = rest;
     }
-
     private static ResponseEntity<Object> prepareResponse(ResponseEntity<Object> response) {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response;
@@ -27,6 +27,7 @@ public class BaseClient {
     }
 
     protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
+        log.info(":::::BaseClient get-> path: {}, param: {}", path, parameters);
         return makeAndSendRequest(HttpMethod.GET, path, parameters, null);
     }
 

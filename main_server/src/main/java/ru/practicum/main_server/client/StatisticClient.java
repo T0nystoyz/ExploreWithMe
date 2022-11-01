@@ -1,5 +1,6 @@
 package ru.practicum.main_server.client;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.net.URLEncoder;
-
+@Slf4j
 @Service
 public class StatisticClient extends BaseClient {
 
@@ -40,6 +41,7 @@ public class StatisticClient extends BaseClient {
                 "uris", uris.get(0),
                 "unique", unique
         );
+        log.info(":::::StatisticClient getStats-> start:{} end{}: uris:{}", start, end, uris);
         return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 }
