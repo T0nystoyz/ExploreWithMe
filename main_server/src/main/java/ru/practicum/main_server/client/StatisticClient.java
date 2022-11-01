@@ -45,7 +45,7 @@ public class StatisticClient extends BaseClient {
                 "unique", unique
         );
         log.info(":::::StatisticClient getStats-> start:{} end{}: uris:{}", start, end, uris);
-        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+        return get( "localhost:9090" + "/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 }
 
