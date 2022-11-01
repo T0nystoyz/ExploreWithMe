@@ -23,7 +23,7 @@ import java.net.URLEncoder;
 public class StatisticClient extends BaseClient {
 
     @Autowired
-    public StatisticClient(@Value("${statistics.url}") String serverUrl, RestTemplateBuilder builder) {
+    public StatisticClient(@Value("${STATS_SERVER_URL}") String serverUrl, RestTemplateBuilder builder) {
         super(
                 builder
                         .uriTemplateHandler(new DefaultUriBuilderFactory(serverUrl))
@@ -45,7 +45,7 @@ public class StatisticClient extends BaseClient {
                 "unique", unique
         );
         log.info(":::::StatisticClient getStats-> start:{} end{}: uris:{}", start, end, uris);
-        return get("localhost:9090" + "/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
+        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }
 }
 
