@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.net.URLEncoder;
+
 @Slf4j
 @Service
 public class StatisticClient extends BaseClient {

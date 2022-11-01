@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
+
 @Slf4j
 public class BaseClient {
     protected final RestTemplate rest;
@@ -15,6 +16,7 @@ public class BaseClient {
     public BaseClient(RestTemplate rest) {
         this.rest = rest;
     }
+
     private static ResponseEntity<Object> prepareResponse(ResponseEntity<Object> response) {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response;
