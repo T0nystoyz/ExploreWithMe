@@ -1,7 +1,6 @@
 package ru.practicum.main_server.client;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.usertype.UserVersionType;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
