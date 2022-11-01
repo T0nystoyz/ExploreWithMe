@@ -13,6 +13,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.net.URLEncoder;
@@ -38,12 +39,11 @@ public class StatisticClient extends BaseClient {
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end,
                                            List<String> uris, Boolean unique) throws UnsupportedEncodingException {
         Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start.toString(), StandardCharsets.UTF_8.toString()),
-                "end", URLEncoder.encode(end.toString(), StandardCharsets.UTF_8.toString()),
+                "start", URLEncoder.encode(start.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), StandardCharsets.UTF_8.toString()),
+                "end", URLEncoder.encode(end.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")), StandardCharsets.UTF_8.toString()),
                 "uris", uris.get(0),
                 "unique", unique
         );
-        //String path = "localhost:9090/stats?start=" + ;
         log.info(":::::StatisticClient getStats-> start:{} end{}: uris:{}", start, end, uris);
         return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }

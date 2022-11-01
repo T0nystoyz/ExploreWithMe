@@ -30,8 +30,8 @@ public class StatisticService {
 
         String decodeStart = URLDecoder.decode(start, StandardCharsets.UTF_8.toString());
         String decodeEnd = URLDecoder.decode(end, StandardCharsets.UTF_8.toString());
-        startTime = LocalDateTime.parse(decodeStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        endTime = LocalDateTime.parse(decodeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        startTime = LocalDateTime.parse(decodeStart/*, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")*/);
+        endTime = LocalDateTime.parse(decodeEnd/*, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")*/);
         log.info(":::декодирование прошло успешно {} -> {}", start, decodeStart);
 
         if (unique) {
