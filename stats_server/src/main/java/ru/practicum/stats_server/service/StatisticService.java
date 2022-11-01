@@ -32,7 +32,7 @@ public class StatisticService {
         String decodeEnd = URLDecoder.decode(end, StandardCharsets.UTF_8.toString());
         startTime = LocalDateTime.parse(decodeStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         endTime = LocalDateTime.parse(decodeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        log.info("декодирование прошло успешно {} -> {}", start, decodeStart);
+        log.info(":::декодирование прошло успешно {} -> {}", start, decodeStart);
 
         if (unique) {
             return repository.getViewStatsListByParamsUnique(startTime, endTime, uris);

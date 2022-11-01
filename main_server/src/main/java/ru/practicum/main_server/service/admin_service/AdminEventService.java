@@ -114,9 +114,8 @@ public class AdminEventService {
         ResponseEntity<Object> responseEntity;
         try {
             responseEntity = statClient.getStats(
-                    eventRepository.getReferenceById(eventId).getEventDate()
-                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    eventRepository.getReferenceById(eventId).getEventDate(),
+                    LocalDateTime.now(),
                     List.of("/events/" + eventId), false);
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("ошибка кодирования URL");

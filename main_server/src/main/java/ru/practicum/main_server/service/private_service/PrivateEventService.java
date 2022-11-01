@@ -144,8 +144,8 @@ public class PrivateEventService {
         ResponseEntity<Object> responseEntity;
         try {
             responseEntity = statClient.getStats(
-                    eventRepository.getReferenceById(eventId).getCreatedOn().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                    eventRepository.getReferenceById(eventId).getCreatedOn(),
+                    LocalDateTime.now(),
                     List.of("/events/" + eventId),
                     false);
         } catch (UnsupportedEncodingException e) {

@@ -25,6 +25,7 @@ public class BaseClient {
         if (response.hasBody()) {
             return responseBuilder.body(response.getBody());
         }
+        log.info(":::::BaseClient prepareResponse-> response: {}", responseBuilder.build());
         return responseBuilder.build();
     }
 
@@ -40,7 +41,7 @@ public class BaseClient {
     private <T> ResponseEntity<Object> makeAndSendRequest(HttpMethod method, String path,
                                                           @Nullable Map<String, Object> parameters, @Nullable T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body, defaultHeaders());
-
+        log.info(":::::BaseClient makeAndSendRequest-> path: {}, param: {}", path, parameters);
         ResponseEntity<Object> responseEntity;
         try {
             responseEntity = (parameters != null) ? rest.exchange(path, method, requestEntity, Object.class, parameters)
