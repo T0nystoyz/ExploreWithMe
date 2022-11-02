@@ -84,7 +84,6 @@ public class AdminEventService {
         Event event = eventRepository.getReferenceById(eventId);
         event.setState(State.CANCELED);
         event = eventRepository.save(event);
-        //EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         log.info("AdminEventService: отклонение события с id={}", eventId);
         return EventMapper.toEventFullDto(event);
     }

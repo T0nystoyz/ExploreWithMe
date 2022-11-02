@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.main_server.model.*;
 import ru.practicum.main_server.model.dto.*;
-import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.service.admin_service.AdminEventService;
 
 import javax.validation.constraints.Positive;

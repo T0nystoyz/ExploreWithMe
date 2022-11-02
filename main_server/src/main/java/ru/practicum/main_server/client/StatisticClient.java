@@ -32,11 +32,6 @@ public class StatisticClient extends BaseClient {
         );
     }
 
-// TODO проверить если приходит в сервекр статистики нулл или пустое время. как его кодировать если нулл, а может ли оно быть нулл?
-// TODO добавить в логеры больше информации
-// TODO посмотрить почему декодинг не проходит в сервисе
-// TODO
-
     public void createHit(EndpointHitDto endpointHit) {
         post("/hit", endpointHit);
     }

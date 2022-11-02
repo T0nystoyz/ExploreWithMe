@@ -12,7 +12,6 @@ import ru.practicum.main_server.repository.CategoryRepository;
 import javax.persistence.EntityNotFoundException;
 
 import static ru.practicum.main_server.mapper.CategoryMapper.*;
-import static ru.practicum.main_server.mapper.CategoryMapper.toCategoryFromCategoryDto;
 
 @Slf4j
 @Service
