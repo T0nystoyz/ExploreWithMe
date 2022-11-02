@@ -76,8 +76,7 @@ public class AdminEventService {
         log.info("AdminEventService: публикация события с id={}", eventId);
         event.setState(State.PUBLISHED);
         event = eventRepository.save(event);
-        EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
-        return eventFullDto;
+        return EventMapper.toEventFullDto(event);
     }
 
     public EventFullDto rejectEvent(Long eventId) {
@@ -114,7 +113,7 @@ public class AdminEventService {
         ResponseEntity<Object> responseEntity;
         try {
             responseEntity = statClient.getStats(
-                    eventRepository.getReferenceById(eventId).getEventDate(),
+                    eventRepository.getReferenceById(eventId).getCreatedOn(),
                     LocalDateTime.now(),
                     List.of("/events/" + eventId), false);
         } catch (UnsupportedEncodingException e) {
