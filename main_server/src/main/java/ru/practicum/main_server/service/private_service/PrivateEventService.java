@@ -75,6 +75,7 @@ public class PrivateEventService {
         Category category = getCategoryFromDbOrThrow(newEventDto.getCategory());
         event.setCategory(category);
         event.setLocation(location);
+        event.setConfirmedRequests(0);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         log.info("PrivateEventService: создано событие с именем {}", newEventDto.getTitle());
