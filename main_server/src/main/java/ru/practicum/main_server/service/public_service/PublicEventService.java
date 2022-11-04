@@ -22,10 +22,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -85,23 +82,6 @@ public class PublicEventService {
         dto.setViews(getViews(id));
         return dto;
     }
-    /*
-    public EventFullDto setConfirmedRequestsAndViewsEventFullDto(EventFullDto eventFullDto) {
-        Long confirmedRequests = participationRepository
-                .countByEventIdAndStatus(eventFullDto.getId(), Status.CONFIRMED);
-        eventFullDto.setConfirmedRequests(confirmedRequests);
-        eventFullDto.setViews(getViews(eventFullDto.getId()));
-        return eventFullDto;
-    }*/
-
-
-    /*public EventShortDto setConfirmedRequestsAndViewsEventShortDto(EventShortDto eventShortDto) {
-        Long confirmedRequests = participationRepository
-                .countByEventIdAndStatus(eventShortDto.getId(), Status.CONFIRMED);
-        eventShortDto.setConfirmedRequests(confirmedRequests);
-        eventShortDto.setViews(getViews(eventShortDto.getId()));
-        return eventShortDto;
-    }*/
 
     /**
      * Отправляет данные в сервис статистики
@@ -156,8 +136,15 @@ public class PublicEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (responseEntity.getStatusCodeValue() < 300) {
-            return (Integer) ((LinkedHashMap<?, ?>) Objects.requireNonNull(responseEntity.getBody())).get("hits");
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            Integer views = null;
+            List<Map<String, Object>> body = (List<Map<String, Object>>) responseEntity.getBody();
+            if (body != null && body.size() > 0) {
+                for (Map<String, Object> s : body) {
+                    views = (((Number) s.get("hits")).intValue());
+                }
+            }
+            return views;
         }
         return 0;
     }

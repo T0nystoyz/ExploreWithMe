@@ -22,9 +22,8 @@ import ru.practicum.main_server.repository.EventRepository;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -89,10 +88,6 @@ public class AdminEventService {
         log.info("AdminEventService: отклонение события с id={}", eventId);
         return EventMapper.toEventFullDto(event);
     }
-/* private EventFullDto setConfirmedRequestsAndViews(EventFullDto eventFullDto) {
-        eventFullDto.setViews(getViews(eventFullDto.getId()));
-        return eventFullDto;
-    }*/
 
     /**
      * Возвращает кол-во просмотров события
@@ -111,8 +106,15 @@ public class AdminEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (responseEntity.getStatusCodeValue() < 300) {
-            return (Integer) ((LinkedHashMap<?, ?>) Objects.requireNonNull(responseEntity.getBody())).get("hits");
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            Integer views = null;
+            List<Map<String, Object>> body = (List<Map<String, Object>>) responseEntity.getBody();
+            if (body != null && body.size() > 0) {
+                for (Map<String, Object> s : body) {
+                    views = (((Number) s.get("hits")).intValue());
+                }
+            }
+            return views;
         }
         return 0;
     }
