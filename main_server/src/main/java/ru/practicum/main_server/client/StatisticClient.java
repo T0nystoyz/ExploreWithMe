@@ -21,7 +21,8 @@ import java.net.URLEncoder;
 @Slf4j
 @Service
 public class StatisticClient extends BaseClient {
-    private final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     @Autowired
     public StatisticClient(@Value("${STATS_SERVER_URL}") String serverUrl, RestTemplateBuilder builder) {
         super(
@@ -39,8 +40,8 @@ public class StatisticClient extends BaseClient {
     public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end,
                                            List<String> uris, Boolean unique) throws UnsupportedEncodingException {
         Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start.format(DATE_FORMAT), StandardCharsets.UTF_8.toString()),
-                "end", URLEncoder.encode(end.format(DATE_FORMAT), StandardCharsets.UTF_8.toString()),
+                "start", URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8.toString()),
+                "end", URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8.toString()),
                 "uris", uris.get(0),
                 "unique", unique
         );

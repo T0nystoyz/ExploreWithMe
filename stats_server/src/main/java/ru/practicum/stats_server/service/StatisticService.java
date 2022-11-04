@@ -21,7 +21,7 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 public class StatisticService {
-    private final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final HitRepository repository;
 
     public List<ViewStats> getViewStats(String start, String end, List<String> uris, Boolean unique)
@@ -32,8 +32,8 @@ public class StatisticService {
 
         String decodeStart = URLDecoder.decode(start, StandardCharsets.UTF_8.toString());
         String decodeEnd = URLDecoder.decode(end, StandardCharsets.UTF_8.toString());
-        startTime = LocalDateTime.parse(decodeStart, DATE_FORMAT);
-        endTime = LocalDateTime.parse(decodeEnd, DATE_FORMAT);
+        startTime = LocalDateTime.parse(decodeStart, formatter);
+        endTime = LocalDateTime.parse(decodeEnd, formatter);
         log.info(":::::декодирование прошло успешно {} -> {}", start, decodeStart);
 
         if (unique) {

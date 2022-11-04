@@ -68,6 +68,7 @@ public class PublicCompilationService {
         }
         return 0;
     }
+
     public CompilationDto readCompilation(long id) {
         CompilationDto compilationDto = CompilationMapper.toCompilationDto(getCompilationFromDbOrThrow(id));
         log.info("PublicCompilationService: Чтение компиляции по id={}", id);
