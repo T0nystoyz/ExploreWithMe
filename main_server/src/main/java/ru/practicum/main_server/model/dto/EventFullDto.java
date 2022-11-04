@@ -12,7 +12,7 @@ public class EventFullDto {
     private Long id;
     private String annotation;
     private CategoryDto category;
-    private Long confirmedRequests;
+    private Integer confirmedRequests;
     private String createdOn;
     private String description;
     private String eventDate;

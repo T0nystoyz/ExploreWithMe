@@ -4,7 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.stats_server.model.EndpointHit;
+import ru.practicum.stats_server.dto.EndpointHitDto;
 import ru.practicum.stats_server.dto.ViewStats;
 import ru.practicum.stats_server.service.StatisticService;
 
@@ -22,7 +22,7 @@ public class StatisticController {
     }
 
     @PostMapping("/hit")
-    public EndpointHit createHit(@RequestBody @Valid EndpointHit endpointHit) {
+    public EndpointHitDto createHit(@RequestBody @Valid EndpointHitDto endpointHit) {
         log.info(":::POST /hit StatisticController: создание просмотра: {}", endpointHit);
         return statisticService.addHit(endpointHit);
     }

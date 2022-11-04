@@ -36,7 +36,6 @@ public class PrivateParticipationRequestService {
 
     public List<ParticipationRequestDto> readParticipationRequests(Long userId) {
         log.info("PrivateParticipationRequestService: чтение запросов отправленных пользователем с id={}", userId);
-        checkUserInDb(userId);
         return participationRepository.findAllByRequester(userRepository.getReferenceById(userId))
                 .stream()
                 .map(ParticipationRequestMapper::toParticipationRequestDto)
@@ -45,10 +44,8 @@ public class PrivateParticipationRequestService {
 
     @Transactional
     public ParticipationRequestDto createParticipationRequest(Long userId, Long eventId) {
-        checkEventInDb(eventId);
-        checkUserInDb(userId);
-        User requester = userRepository.getReferenceById(userId);
-        Event event = eventRepository.getReferenceById(eventId);
+        User requester = getUserFromDbOrThrow(userId);
+        Event event = getEventFromDbOrThrow(eventId);
         validateRequest(requester, event);
         ParticipationRequest participation = ParticipationRequest.builder()
                 .event(event)
@@ -66,8 +63,7 @@ public class PrivateParticipationRequestService {
 
     @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
-        checkRequestInDb(requestId);
-        ParticipationRequest participation = participationRepository.getReferenceById(requestId);
+        ParticipationRequest participation = getRequestFromDbOrThrow(requestId);
         if (userId.equals(participation.getRequester().getId())) {
             participation.setStatus(Status.CANCELED);
         } else {
@@ -77,9 +73,7 @@ public class PrivateParticipationRequestService {
     }
 
     public List<ParticipationRequestDto> readEventParticipation(Long userId, Long eventId) {
-        checkEventInDb(eventId);
-        checkUserInDb(userId);
-        checkInitiator(userId, eventId);
+        validateInitiator(userId, eventId);
         return participationRepository.findAllByEventId(eventId)
                 .stream()
                 .map(ParticipationRequestMapper::toParticipationRequestDto)
@@ -88,34 +82,30 @@ public class PrivateParticipationRequestService {
 
     @Transactional
     public ParticipationRequestDto approveParticipationRequest(Long userId, Long eventId, Long requestId) {
-        checkEventInDb(eventId);
-        checkInitiator(userId, eventId);
-        checkUserInDb(userId);
-        Event event = eventRepository.getReferenceById(eventId);
-        ParticipationRequest participation = participationRepository.getReferenceById(requestId);
+        validateInitiator(userId, eventId);
+        Event event = getEventFromDbOrThrow(eventId);
+        ParticipationRequest participation = getRequestFromDbOrThrow(requestId);
         if (!participation.getStatus().equals(Status.PENDING)) {
             throw new ForbiddenException("чтобы принять запрос, он должен быть в статусе PENDING");
         }
-        Long countConfirmedRequests = participationRepository.countByEventIdAndStatus(eventId, Status.CONFIRMED);
-        if (event.getParticipantLimit() >= countConfirmedRequests) {
+        if (event.getParticipantLimit() <= event.getConfirmedRequests()) {
             participation.setStatus(Status.REJECTED);
         }
         participation.setStatus(Status.CONFIRMED);
+        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        eventRepository.save(event);
         return ParticipationRequestMapper.toParticipationRequestDto(participationRepository.save(participation));
     }
 
     @Transactional
     public ParticipationRequestDto rejectParticipationRequest(Long userId, Long eventId, Long requestId) {
-        checkUserInDb(userId);
-        checkEventInDb(eventId);
-        checkRequestInDb(requestId);
-        checkInitiator(userId, eventId);
+        validateInitiator(userId, eventId);
         ParticipationRequest participation = participationRepository.getReferenceById(requestId);
         participation.setStatus(Status.REJECTED);
         return ParticipationRequestMapper.toParticipationRequestDto(participationRepository.save(participation));
     }
 
-    private void checkInitiator(Long userId, Long eventId) {
+    private void validateInitiator(Long userId, Long eventId) {
         Event event = eventRepository.getReferenceById(eventId);
         if (!event.getInitiator().getId().equals(userId)) {
             throw new BadRequestException("только инициатор события может просматривать запросы на участие");
@@ -134,31 +124,25 @@ public class PrivateParticipationRequestService {
         if (!(event.getState().equals(State.PUBLISHED))) {
             throw new ForbiddenException("невозможно создать запрос на неопубликованное событие");
         }
-        Long confirmedRequests = participationRepository.countDistinctByEventAndStatus(event, Status.CONFIRMED);
         if (event.getParticipantLimit() != null && event.getParticipantLimit() != 0 && event
-                .getParticipantLimit() <= confirmedRequests) {
-            throw new ForbiddenException(String.format("превышено количество участников события - %d", confirmedRequests));
+                .getParticipantLimit() <= event.getConfirmedRequests()) {
+            throw new ForbiddenException(String.format("превышено количество участников события - %d",
+                    event.getConfirmedRequests()));
         }
     }
 
-    private void checkEventInDb(Long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по id=%d данных нет", id));
-        }
-        log.info("PrivateParticipationRequestService: проверка существования события с id={} прошла успешно", id);
+    private Event getEventFromDbOrThrow(Long id) {
+        return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("AdminCompilationService: события по id=%d нет в базе", id)));
     }
 
-    private void checkRequestInDb(Long requestId) {
-        if (!participationRepository.existsById(requestId)) {
-            throw new NotFoundException(String.format("запрса с id=%d в базе нет", requestId));
-        }
-        log.info("PrivateParticipationRequestService: проверка существования запроса с id={} прошла успешно", requestId);
+    private ParticipationRequest getRequestFromDbOrThrow(Long requestId) {
+        return participationRepository.findById(requestId).orElseThrow(() -> new NotFoundException(
+                String.format("PrivateParticipationRequestService: запроса по id=%d нет в базе", requestId)));
     }
 
-    private void checkUserInDb(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по id=%d данных нет", id));
-        }
-        log.info("PrivateParticipationRequestService: проверка существования пользователя с id={} прошла успешно", id);
+    private User getUserFromDbOrThrow(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("PrivateEventService: пользователя по id=%d нет в базе", id)));
     }
 }

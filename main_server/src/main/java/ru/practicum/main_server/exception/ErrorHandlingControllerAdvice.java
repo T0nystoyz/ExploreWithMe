@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
-@RestController
 @ControllerAdvice
 public class ErrorHandlingControllerAdvice {
     @ExceptionHandler({BadRequestException.class,

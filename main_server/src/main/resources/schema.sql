@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS events
     request_moderation BOOLEAN,
     state              VARCHAR(100),
     title              VARCHAR(255)                            NOT NULL,
+    confirmed_requests BIGINT,
     CONSTRAINT pk_events PRIMARY KEY (id),
     CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE,
     CONSTRAINT fk_initiator FOREIGN KEY (initiator_id) REFERENCES users (id) ON DELETE CASCADE,

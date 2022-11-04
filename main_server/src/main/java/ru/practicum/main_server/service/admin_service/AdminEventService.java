@@ -2,25 +2,29 @@ package ru.practicum.main_server.service.admin_service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
 import ru.practicum.main_server.exception.ForbiddenException;
 import ru.practicum.main_server.exception.InternalServerErrorException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
-import ru.practicum.main_server.model.*;
-import ru.practicum.main_server.model.dto.*;
+import ru.practicum.main_server.model.Category;
+import ru.practicum.main_server.model.Event;
+import ru.practicum.main_server.model.State;
+import ru.practicum.main_server.model.dto.AdminUpdateEventRequest;
+import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
-import ru.practicum.main_server.repository.ParticipationRequestRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,16 +32,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class AdminEventService {
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository participationRepository;
     private final StatisticClient statClient;
     private final CategoryRepository categoryRepository;
 
 
     @Autowired
-    public AdminEventService(EventRepository eventRepository, ParticipationRequestRepository participationRepository,
+    public AdminEventService(EventRepository eventRepository,
                              StatisticClient statClient, CategoryRepository categoryRepository) {
         this.eventRepository = eventRepository;
-        this.participationRepository = participationRepository;
         this.statClient = statClient;
         this.categoryRepository = categoryRepository;
     }
@@ -51,22 +53,21 @@ public class AdminEventService {
                         PageRequest.of(from / size, size))
                 .stream()
                 .map(EventMapper::toEventFullDto)
-                .map(this::setConfirmedRequestsAndViews)
+                .peek(e -> e.setViews(getViews(e.getId())))
                 .collect(Collectors.toList());
     }
 
     public EventFullDto updateEvent(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
-        checkEventInDb(eventId);
         Event event = getEventFromAdminRequest(eventId, adminUpdateEventRequest);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
+        eventFullDto.setViews(getViews(eventId));
         log.info("AdminEventService: обновление события с id={}, запрос: {}", eventId, adminUpdateEventRequest);
-        return setConfirmedRequestsAndViews(eventFullDto);
+        return eventFullDto;
     }
 
     public EventFullDto publishEvent(Long eventId) {
-        checkEventInDb(eventId);
-        Event event = eventRepository.getReferenceById(eventId);
+        Event event = getEventFromDbOrThrow(eventId);
         if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
             throw new ForbiddenException("дата события раньше чем через два часа от создания/обновления");
         }
@@ -76,31 +77,22 @@ public class AdminEventService {
         log.info("AdminEventService: публикация события с id={}", eventId);
         event.setState(State.PUBLISHED);
         event = eventRepository.save(event);
-        return EventMapper.toEventFullDto(event);
+        EventFullDto dto = EventMapper.toEventFullDto(event);
+        dto.setViews(getViews(eventId));
+        return dto;
     }
 
     public EventFullDto rejectEvent(Long eventId) {
-        checkEventInDb(eventId);
-        Event event = eventRepository.getReferenceById(eventId);
+        Event event = getEventFromDbOrThrow(eventId);
         event.setState(State.CANCELED);
         event = eventRepository.save(event);
         log.info("AdminEventService: отклонение события с id={}", eventId);
         return EventMapper.toEventFullDto(event);
     }
-
-    /**
-     * Возвращает событие с полями просмотров и подтвержденных учатсников
-     *
-     * @param eventFullDto - полный DTO события
-     * @return EventFullDto.class
-     */
-    private EventFullDto setConfirmedRequestsAndViews(EventFullDto eventFullDto) {
-        Long confirmedRequests = participationRepository
-                .countByEventIdAndStatus(eventFullDto.getId(), Status.CONFIRMED);
-        eventFullDto.setConfirmedRequests(confirmedRequests);
+/* private EventFullDto setConfirmedRequestsAndViews(EventFullDto eventFullDto) {
         eventFullDto.setViews(getViews(eventFullDto.getId()));
         return eventFullDto;
-    }
+    }*/
 
     /**
      * Возвращает кол-во просмотров события
@@ -108,18 +100,19 @@ public class AdminEventService {
      * @param eventId айди события
      * @return int - количество просмотров
      */
-    private int getViews(long eventId) {
+    private Integer getViews(long eventId) {
         ResponseEntity<Object> responseEntity;
         try {
             responseEntity = statClient.getStats(
                     eventRepository.getReferenceById(eventId).getCreatedOn(),
                     LocalDateTime.now(),
-                    List.of("/events/" + eventId), false);
+                    List.of("/events/" + eventId),
+                    false);
         } catch (UnsupportedEncodingException e) {
-            throw new InternalServerErrorException("ошибка кодирования URL");
+            throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (Objects.equals(responseEntity.getBody(), "")) {
-            return (Integer) ((LinkedHashMap<?, ?>) responseEntity.getBody()).get("hits");
+        if (responseEntity.getStatusCodeValue() < 300) {
+            return (Integer) ((LinkedHashMap<?, ?>) Objects.requireNonNull(responseEntity.getBody())).get("hits");
         }
         return 0;
     }
@@ -132,14 +125,12 @@ public class AdminEventService {
      * @return Event.class
      */
     private Event getEventFromAdminRequest(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
-        checkEventInDb(eventId);
-        checkCategoryInDb(adminUpdateEventRequest.getCategory());
-        Event event = eventRepository.getReferenceById(eventId);
+        Event event = getEventFromDbOrThrow(eventId);
         if (adminUpdateEventRequest.getAnnotation() != null) {
             event.setAnnotation(adminUpdateEventRequest.getAnnotation());
         }
         if (adminUpdateEventRequest.getCategory() != null) {
-            Category category = categoryRepository.getReferenceById(adminUpdateEventRequest.getCategory());
+            Category category = getCategoryFromDbOrThrow(adminUpdateEventRequest.getCategory());
             event.setCategory(category);
         }
         if (adminUpdateEventRequest.getDescription() != null) {
@@ -203,15 +194,13 @@ public class AdminEventService {
         return end;
     }
 
-    private void checkEventInDb(long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по даному id=%d данных в базе нет", id));
-        }
+    private Event getEventFromDbOrThrow(Long id) {
+        return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("AdminCompilationService: события по id=%d нет в базе", id)));
     }
 
-    private void checkCategoryInDb(long id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по даному id=%d данных в базе нет", id));
-        }
+    private Category getCategoryFromDbOrThrow(Long id) {
+        return categoryRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("AdminEventService: категории по id=%d нет в базе", id)));
     }
 }

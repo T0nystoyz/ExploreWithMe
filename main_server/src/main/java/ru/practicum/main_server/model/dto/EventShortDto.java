@@ -12,7 +12,8 @@ import lombok.NoArgsConstructor;
 public class EventShortDto {
     private String annotation;
     private CategoryDto category;
-    private Long confirmedRequests;
+    private Integer confirmedRequests;
+    private Integer participationLimit;
     private String eventDate;
     private Long id;
     private UserShortDto initiator;

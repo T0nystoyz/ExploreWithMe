@@ -20,19 +20,4 @@ public class Location {
     private float lat;
     @Column(name = "lon", nullable = false)
     private float lon;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Location location = (Location) o;
-
-        return getId().equals(location.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
 }

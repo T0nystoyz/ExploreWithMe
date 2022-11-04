@@ -32,8 +32,7 @@ public class AdminCategoryService {
 
     public CategoryDto updateCategory(CategoryDto categoryDto) {
         log.info("AdminCategoryService: обновление категории {}", categoryDto);
-        categoryRepository.getReferenceById(categoryDto.getId());
-        categoryRepository.save(toCategoryFromCategoryDto(categoryDto));
+        checkCategoryInDb(categoryDto.getId());
         return toCategoryDto(categoryRepository.save(toCategoryFromCategoryDto(categoryDto)));
     }
 

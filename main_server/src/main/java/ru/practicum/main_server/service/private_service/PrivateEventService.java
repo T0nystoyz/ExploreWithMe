@@ -18,7 +18,6 @@ import ru.practicum.main_server.model.dto.NewEventDto;
 import ru.practicum.main_server.model.dto.UpdateEventRequest;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
-import ru.practicum.main_server.repository.ParticipationRequestRepository;
 import ru.practicum.main_server.repository.UserRepository;
 
 import java.io.UnsupportedEncodingException;
@@ -33,17 +32,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class PrivateEventService {
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository participationRepository;
     private final UserRepository userRepository;
     private final StatisticClient statClient;
     private final CategoryRepository categoryRepository;
     private final PrivateLocationService locationService;
 
-    public PrivateEventService(EventRepository eventRepository, ParticipationRequestRepository participationRepository,
+    public PrivateEventService(EventRepository eventRepository,
                                StatisticClient statClient, UserRepository userRepository,
                                CategoryRepository categoryRepository, PrivateLocationService locationService) {
         this.eventRepository = eventRepository;
-        this.participationRepository = participationRepository;
         this.userRepository = userRepository;
         this.statClient = statClient;
         this.categoryRepository = categoryRepository;
@@ -55,7 +52,7 @@ public class PrivateEventService {
         return eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size))
                 .stream()
                 .map(EventMapper::toEventShortDto)
-                .map(this::setConfirmedRequestsAndViewsEventShortDto)
+                .peek(e -> e.setViews(getViews(e.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -64,8 +61,9 @@ public class PrivateEventService {
         Event event = getEventFromRequest(userId, updateEventRequest);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
+        eventFullDto.setViews(getViews(event.getId()));
         log.info("PrivateEventService: событие обновлено userId={}, newEvent={}", userId, updateEventRequest);
-        return setConfirmedRequestsAndViewsEventFullDto(eventFullDto);
+        return eventFullDto;
     }
 
     @Transactional
@@ -74,10 +72,8 @@ public class PrivateEventService {
         location = locationService.save(location);
         Event event = EventMapper.toNewEvent(newEventDto);
         validateEventDate(event);
-        checkUserInDb(userId);
-        event.setInitiator(userRepository.getReferenceById(userId));
-        checkCategoryInDb(newEventDto.getCategory());
-        Category category = categoryRepository.getReferenceById(newEventDto.getCategory());
+        event.setInitiator(getUserFromDbOrThrow(userId));
+        Category category = getCategoryFromDbOrThrow(newEventDto.getCategory());
         event.setCategory(category);
         event.setLocation(location);
         event = eventRepository.save(event);
@@ -87,52 +83,37 @@ public class PrivateEventService {
     }
 
     public EventFullDto readEvent(Long userId, Long eventId) {
-        checkEventInDb(eventId);
         checkEventInitiator(userId, eventId);
         log.info("PrivateEventService: чтение пользователем с id={} события с id={}", userId, eventId);
-        return setConfirmedRequestsAndViewsEventFullDto(
-                EventMapper.toEventFullDto(eventRepository.getReferenceById(eventId)));
+        return EventMapper.toEventFullDto(eventRepository.getReferenceById(eventId));
     }
 
     @Transactional
     public EventFullDto cancelEvent(Long userId, Long eventId) {
-        checkEventInDb(eventId);
-        Event event = eventRepository.getReferenceById(eventId);
+        Event event = getEventFromDbOrThrow(eventId);
         checkEventInitiator(userId, eventId);
         event.setState(State.CANCELED);
         event = eventRepository.save(event);
-        EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         log.info("PrivateEventService: событие id={} отменено пользователем с id={}", eventId, userId);
-        return setConfirmedRequestsAndViewsEventFullDto(eventFullDto);
+        return EventMapper.toEventFullDto(event);
     }
-
-    /**
-     * Возвращает событие с заполненными полями views и confirmedRequests
-     *
-     * @param eventFullDto полный DTO события
-     * @return EventFullDto.class
-     */
+    /*
     private EventFullDto setConfirmedRequestsAndViewsEventFullDto(EventFullDto eventFullDto) {
         Long confirmedRequests = participationRepository
                 .countByEventIdAndStatus(eventFullDto.getId(), Status.CONFIRMED);
         eventFullDto.setConfirmedRequests(confirmedRequests);
         eventFullDto.setViews(getViews(eventFullDto.getId()));
         return eventFullDto;
-    }
+    }*/
 
-    /**
-     * Возвращает краткое представление события с заполненными полями views и confirmedRequests
-     *
-     * @param eventShortDto краткое представление события
-     * @return EventShortDto.class
-     */
+    /*
     private EventShortDto setConfirmedRequestsAndViewsEventShortDto(EventShortDto eventShortDto) {
         Long confirmedRequests = participationRepository
                 .countByEventIdAndStatus(eventShortDto.getId(), Status.CONFIRMED);
         eventShortDto.setConfirmedRequests(confirmedRequests);
         eventShortDto.setViews(getViews(eventShortDto.getId()));
         return eventShortDto;
-    }
+    }*/
 
     /**
      * Возвращает кол-во просмотров события
@@ -151,10 +132,9 @@ public class PrivateEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (Objects.equals(responseEntity.getBody(), "")) {
-            return (Integer) ((LinkedHashMap<?, ?>) responseEntity.getBody()).get("hits");
+        if (responseEntity.getStatusCodeValue() < 300) {
+            return (Integer) ((LinkedHashMap<?, ?>) Objects.requireNonNull(responseEntity.getBody())).get("hits");
         }
-
         return 0;
     }
 
@@ -166,8 +146,7 @@ public class PrivateEventService {
      * @return Event.class
      */
     private Event getEventFromRequest(Long userId, UpdateEventRequest updateEventRequest) {
-        checkEventInDb(updateEventRequest.getEventId());
-        Event event = eventRepository.getReferenceById(updateEventRequest.getEventId());
+        Event event = getEventFromDbOrThrow(updateEventRequest.getEventId());
         if (!event.getInitiator().getId().equals(userId)) {
             throw new BadRequestException("only creator can update event");
         }
@@ -178,8 +157,7 @@ public class PrivateEventService {
             event.setAnnotation(updateEventRequest.getAnnotation());
         }
         if (updateEventRequest.getCategory() != null) {
-            checkCategoryInDb(updateEventRequest.getCategory());
-            Category category = categoryRepository.getReferenceById(updateEventRequest.getCategory());
+            Category category = getCategoryFromDbOrThrow(updateEventRequest.getCategory());
             event.setCategory(category);
         }
         if (updateEventRequest.getEventDate() != null) {
@@ -212,28 +190,25 @@ public class PrivateEventService {
      * @param eventId айди события
      */
     private void checkEventInitiator(Long userId, Long eventId) {
-        Event event = eventRepository.getReferenceById(eventId);
+        Event event = getEventFromDbOrThrow(eventId);
         if (!event.getInitiator().getId().equals(userId)) {
             throw new ForbiddenException("только инициатор может просомтреть полную информацию о событии");
         }
     }
 
-    private void checkEventInDb(long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по даному id=%d данных в базе нет", id));
-        }
+    private Event getEventFromDbOrThrow(Long id) {
+        return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("PrivateEventService: события по id=%d нет в базе", id)));
     }
 
-    private void checkCategoryInDb(long id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по даному id=%d данных в базе нет", id));
-        }
+    private Category getCategoryFromDbOrThrow(Long id) {
+        return categoryRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("PrivateEventService: категории по id=%d нет в базе", id)));
     }
 
-    private void checkUserInDb(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по даному id=%d данных в базе нет", id));
-        }
+    private User getUserFromDbOrThrow(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("PrivateEventService: пользователя по id=%d нет в базе", id)));
     }
 
     private void validateEventDate(Event event) {

@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.stats_server.model.EndpointHit;
+import ru.practicum.stats_server.dto.EndpointHitDto;
+import ru.practicum.stats_server.dto.EndpointHitMapper;
 import ru.practicum.stats_server.dto.ViewStats;
 import ru.practicum.stats_server.repository.HitRepository;
 
@@ -20,6 +21,7 @@ import java.util.List;
 @Transactional
 @RequiredArgsConstructor
 public class StatisticService {
+    private final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final HitRepository repository;
 
     public List<ViewStats> getViewStats(String start, String end, List<String> uris, Boolean unique)
@@ -30,8 +32,8 @@ public class StatisticService {
 
         String decodeStart = URLDecoder.decode(start, StandardCharsets.UTF_8.toString());
         String decodeEnd = URLDecoder.decode(end, StandardCharsets.UTF_8.toString());
-        startTime = LocalDateTime.parse(decodeStart, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        endTime = LocalDateTime.parse(decodeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        startTime = LocalDateTime.parse(decodeStart, DATE_FORMAT);
+        endTime = LocalDateTime.parse(decodeEnd, DATE_FORMAT);
         log.info(":::::декодирование прошло успешно {} -> {}", start, decodeStart);
 
         if (unique) {
@@ -40,7 +42,7 @@ public class StatisticService {
         return repository.getViewStatsListByParams(startTime, endTime, uris);
     }
 
-    public EndpointHit addHit(EndpointHit hit) {
-        return repository.save(hit);
+    public EndpointHitDto addHit(EndpointHitDto hit) {
+        return EndpointHitMapper.toEndpointHitDto(EndpointHitMapper.toEndpointHit(hit));
     }
 }

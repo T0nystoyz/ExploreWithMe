@@ -13,18 +13,19 @@ import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
 import ru.practicum.main_server.model.Event;
 import ru.practicum.main_server.model.State;
-import ru.practicum.main_server.model.Status;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.model.dto.EventShortDto;
 import ru.practicum.main_server.repository.EventRepository;
-import ru.practicum.main_server.repository.ParticipationRequestRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,15 +33,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class PublicEventService {
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository participationRepository;
     private final StatisticClient statClient;
 
 
     @Autowired
-    public PublicEventService(EventRepository eventRepository, ParticipationRequestRepository participationRepository,
+    public PublicEventService(EventRepository eventRepository,
                               StatisticClient statClient) {
         this.eventRepository = eventRepository;
-        this.participationRepository = participationRepository;
         this.statClient = statClient;
     }
 
@@ -62,7 +61,7 @@ public class PublicEventService {
         List<EventShortDto> listShortDto = events.stream()
                 .filter(event -> event.getState().equals(State.PUBLISHED))
                 .map(EventMapper::toEventShortDto)
-                .map(this::setConfirmedRequestsAndViewsEventShortDto)
+                .peek(e -> e.setViews(getViews(e.getId())))
                 .collect(Collectors.toList());
         if (sort.equals("VIEWS")) {
             listShortDto = listShortDto.stream()
@@ -72,48 +71,37 @@ public class PublicEventService {
         if (onlyAvailable) {
             listShortDto = listShortDto.stream()
                     .filter(eventShortDto -> eventShortDto.getConfirmedRequests()
-                            <= eventRepository.getReferenceById(eventShortDto.getId()).getParticipantLimit())
+                            < eventShortDto.getParticipationLimit())
                     .collect(Collectors.toList());
         }
         return listShortDto;
     }
 
     public EventFullDto readEvent(long id) {
-        checkEventInDb(id);
-        EventFullDto dto = EventMapper.toEventFullDto(eventRepository.getReferenceById(id));
+        EventFullDto dto = EventMapper.toEventFullDto(getEventFromDbOrThrow(id));
         if (!(dto.getState().equals(State.PUBLISHED.toString()))) {
             throw new BadRequestException("можно посмотреть только опубликованные события");
         }
-        return setConfirmedRequestsAndViewsEventFullDto(dto);
+        dto.setViews(getViews(id));
+        return dto;
     }
-
-    /**
-     * Возвращает событие с полями просмотров и подтвержденных учатсников
-     *
-     * @param eventFullDto - полный DTO события
-     * @return EventFullDto.class
-     */
+    /*
     public EventFullDto setConfirmedRequestsAndViewsEventFullDto(EventFullDto eventFullDto) {
         Long confirmedRequests = participationRepository
                 .countByEventIdAndStatus(eventFullDto.getId(), Status.CONFIRMED);
         eventFullDto.setConfirmedRequests(confirmedRequests);
         eventFullDto.setViews(getViews(eventFullDto.getId()));
         return eventFullDto;
-    }
+    }*/
 
-    /**
-     * Возвращает краткое представление события с полями просмотров и подтвержденных учатсников
-     *
-     * @param eventShortDto - краткое представление события
-     * @return EventShortDto.class
-     */
-    public EventShortDto setConfirmedRequestsAndViewsEventShortDto(EventShortDto eventShortDto) {
+
+    /*public EventShortDto setConfirmedRequestsAndViewsEventShortDto(EventShortDto eventShortDto) {
         Long confirmedRequests = participationRepository
                 .countByEventIdAndStatus(eventShortDto.getId(), Status.CONFIRMED);
         eventShortDto.setConfirmedRequests(confirmedRequests);
         eventShortDto.setViews(getViews(eventShortDto.getId()));
         return eventShortDto;
-    }
+    }*/
 
     /**
      * Отправляет данные в сервис статистики
@@ -157,7 +145,7 @@ public class PublicEventService {
      * @param eventId айди события
      * @return int - количество просмотров
      */
-    private int getViews(long eventId) {
+    private Integer getViews(long eventId) {
         ResponseEntity<Object> responseEntity;
         try {
             responseEntity = statClient.getStats(
@@ -168,17 +156,14 @@ public class PublicEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (Objects.requireNonNull(responseEntity.getBody()).equals("")) {
-            return (Integer) ((LinkedHashMap<?, ?>) responseEntity.getBody()).get("hits");
+        if (responseEntity.getStatusCodeValue() < 300) {
+            return (Integer) ((LinkedHashMap<?, ?>) Objects.requireNonNull(responseEntity.getBody())).get("hits");
         }
-
         return 0;
     }
 
-    private void checkEventInDb(long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new NotFoundException(String.format("по даному id=%d данных в базе нет", id));
-        }
+    private Event getEventFromDbOrThrow(Long id) {
+        return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(
+                String.format("AdminCompilationService: события по id=%d нет в базе", id)));
     }
-
 }

@@ -4,6 +4,7 @@ import lombok.*;
 import ru.practicum.main_server.model.Location;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
 
 @Data
 @Builder
@@ -11,15 +12,19 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewEventDto {
+    @NotNull
     private String annotation;
     private long category;
+    @NotNull
     private String description;
     @NotNull
     private String eventDate;
     private Location location;
     private boolean paid;
+    @Positive
     private int participantLimit;
     private boolean requestModeration;
     private String state;
+    @NotNull
     private String title;
 }

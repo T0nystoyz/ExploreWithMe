@@ -22,6 +22,7 @@ public class EventMapper {
                 .eventDate(event.getEventDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .paid(event.isPaid())
                 .title(event.getTitle())
+                .confirmedRequests(event.getConfirmedRequests())
                 .build();
     }
 
@@ -42,6 +43,7 @@ public class EventMapper {
                         .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
                 .requestModeration(event.isRequestModeration())
                 .state(event.getState().toString())
+                .confirmedRequests(event.getConfirmedRequests())
                 .build();
     }
 

@@ -25,19 +25,4 @@ public class ParticipationRequest {
     private User requester;
     @Enumerated(EnumType.STRING)
     private Status status;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ParticipationRequest that = (ParticipationRequest) o;
-
-        return getId().equals(that.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
 }

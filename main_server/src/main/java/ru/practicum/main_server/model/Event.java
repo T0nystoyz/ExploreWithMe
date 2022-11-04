@@ -29,7 +29,7 @@ public class Event {
     private LocalDateTime eventDate;
     @ManyToOne
     private User initiator;
-    @ManyToOne()
+    @ManyToOne
     private Location location;
     @Column(name = "paid", nullable = false)
     private boolean paid;
@@ -43,19 +43,6 @@ public class Event {
     private State state;
     @Column(name = "title", length = 254, nullable = false)
     private String title;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Event event = (Event) o;
-
-        return getId().equals(event.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getId().hashCode();
-    }
+    @Column(name = "confirmed_requests")
+    private Integer confirmedRequests;
 }
