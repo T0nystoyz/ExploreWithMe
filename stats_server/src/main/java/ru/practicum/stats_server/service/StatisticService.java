@@ -43,6 +43,6 @@ public class StatisticService {
     }
 
     public EndpointHitDto addHit(EndpointHitDto hit) {
-        return EndpointHitMapper.toEndpointHitDto(EndpointHitMapper.toEndpointHit(hit));
+        return EndpointHitMapper.toEndpointHitDto(repository.save(EndpointHitMapper.toEndpointHit(hit)));
     }
 }
