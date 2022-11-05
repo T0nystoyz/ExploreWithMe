@@ -43,11 +43,13 @@ public class PublicCompilationService {
         if (pinned == null) {
             return compilationRepository.findAll(PageRequest.of(from / size, size)).stream()
                     .map(CompilationMapper::toCompilationDto)
+                    .peek(com -> com.getEvents().stream().peek(ev -> ev.setViews(getViews(ev.getId()))))
                     .collect(Collectors.toList());
         } else {
             return compilationRepository.findAllByPinned(pinned, PageRequest.of(from / size, size))
                     .stream()
                     .map(CompilationMapper::toCompilationDto)
+                    .peek(com -> com.getEvents().stream().peek(ev -> ev.setViews(getViews(ev.getId()))))
                     .collect(Collectors.toList());
         }
     }
@@ -74,15 +76,6 @@ public class PublicCompilationService {
         log.info("PublicCompilationService: Чтение компиляции по id={}", id);
         return compilationDto;
     }
-
-    /*private CompilationDto setViewsAndConfirmedRequests(CompilationDto compilationDto) {
-        List<EventShortDto> listShortDto = compilationDto.getEvents()
-                .stream()
-                .map(eventService::setConfirmedRequestsAndViewsEventShortDto)
-                .collect(Collectors.toList());
-        compilationDto.setEvents(listShortDto);
-        return compilationDto;
-    }*/
 
     private Compilation getCompilationFromDbOrThrow(Long id) {
         return compilationRepository.findById(id).orElseThrow(() -> new NotFoundException(

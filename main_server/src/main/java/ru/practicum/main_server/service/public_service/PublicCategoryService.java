@@ -2,6 +2,7 @@ package ru.practicum.main_server.service.public_service;
 
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.main_server.mapper.CategoryMapper;
+import ru.practicum.main_server.model.Category;
 import ru.practicum.main_server.model.dto.CategoryDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -34,15 +35,11 @@ public class PublicCategoryService {
 
     public CategoryDto readCategory(long id) {
         log.info("PublicCategoryService: чтение категории по id={}", id);
-        checkCategoryInDb(id);
-        return toCategoryDto(categoryRepository.findCategoryById(id));
+        return toCategoryDto(getCategoryFromDbOrThrow(id));
     }
 
-    private void checkCategoryInDb(long id) {
-        if (!categoryRepository.existsById(id)) {
-            throw new EntityNotFoundException(
-                    String.format("PublicCategoryService: категории с id=%d нет в базе", id));
-        }
-        log.info("PublicCategoryService: проверка существования категории с id={} прошла успешно", id);
+    private Category getCategoryFromDbOrThrow(long id) {
+        return categoryRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String
+                .format("PublicCategoryService: категории с id=%d нет в базе", id)));
     }
 }

@@ -36,7 +36,7 @@ public class PrivateParticipationRequestService {
 
     public List<ParticipationRequestDto> readParticipationRequests(Long userId) {
         log.info("PrivateParticipationRequestService: чтение запросов отправленных пользователем с id={}", userId);
-        return participationRepository.findAllByRequester(userRepository.getReferenceById(userId))
+        return participationRepository.findAllByRequesterId(userId)
                 .stream()
                 .map(ParticipationRequestMapper::toParticipationRequestDto)
                 .collect(Collectors.toList());
@@ -100,13 +100,13 @@ public class PrivateParticipationRequestService {
     @Transactional
     public ParticipationRequestDto rejectParticipationRequest(Long userId, Long eventId, Long requestId) {
         validateInitiator(userId, eventId);
-        ParticipationRequest participation = participationRepository.getReferenceById(requestId);
+        ParticipationRequest participation = getRequestFromDbOrThrow(requestId);
         participation.setStatus(Status.REJECTED);
         return ParticipationRequestMapper.toParticipationRequestDto(participationRepository.save(participation));
     }
 
     private void validateInitiator(Long userId, Long eventId) {
-        Event event = eventRepository.getReferenceById(eventId);
+        Event event = getEventFromDbOrThrow(eventId);
         if (!event.getInitiator().getId().equals(userId)) {
             throw new BadRequestException("только инициатор события может просматривать запросы на участие");
         }
