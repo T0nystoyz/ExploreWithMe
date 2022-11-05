@@ -31,10 +31,6 @@ public class AdminCompilationService {
     public CompilationDto createCompilation(NewCompilationDto newCompilationDto) {
         log.info("AdminCompilationService: создание подборки {}", newCompilationDto);
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto);
-        /*Set<Event> events = newCompilationDto.getEvents().stream()
-                .map(this::getEventFromDbOrThrow)
-                .collect(Collectors.toSet());*/
-
         List<Event> events = eventRepository.findAllById(newCompilationDto.getEvents());
         compilation.setEvents(events);
         Compilation newCompilation = compilationRepository.save(compilation);
@@ -49,8 +45,7 @@ public class AdminCompilationService {
 
     public void deleteEventFromCompilation(Long compId, Long eventId) {
         log.info("AdminCompilationService: удаление события id={} из подборки id={}", eventId, compId);
-        getCompilationFromDbOrThrow(compId);
-        Compilation compilation = compilationRepository.getReferenceById(compId);
+        Compilation compilation = getCompilationFromDbOrThrow(compId);
         List<Event> events = compilation.getEvents();
         events.remove(getEventFromDbOrThrow(eventId));
         compilation.setEvents(events);
@@ -66,29 +61,16 @@ public class AdminCompilationService {
     }
 
     public void unpinCompilation(Long compId) {
-        getCompilationFromDbOrThrow(compId);
-        Compilation compilation = compilationRepository.getReferenceById(compId);
+        Compilation compilation = getCompilationFromDbOrThrow(compId);
         compilation.setPinned(false);
         compilationRepository.save(compilation);
     }
 
     public void pinCompilation(Long compId) {
-        getCompilationFromDbOrThrow(compId);
-        Compilation compilation = compilationRepository.getReferenceById(compId);
+        Compilation compilation = getCompilationFromDbOrThrow(compId);
         compilation.setPinned(true);
         compilationRepository.save(compilation);
     }
-
-
-/*    private CompilationDto setViewsAndConfirmedRequests(CompilationDto compilationDto) {
-        List<EventShortDto> listShortDto = new ArrayList<>();
-        for (EventShortDto eventShortDto : compilationDto.getEvents()) {
-            EventShortDto shortDto = eventService.setConfirmedRequestsAndViewsEventShortDto(eventShortDto);
-            listShortDto.add(shortDto);
-        }
-        compilationDto.setEvents(listShortDto);
-        return compilationDto;
-    }*/
 
     private Compilation getCompilationFromDbOrThrow(Long id) {
         return compilationRepository.findById(id).orElseThrow(() -> new NotFoundException(
