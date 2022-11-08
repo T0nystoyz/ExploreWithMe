@@ -4,11 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
-import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import ru.practicum.main_server.model.dto.ViewStats;
 
@@ -49,16 +51,27 @@ public class StatisticClient {
         return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
     }*/
 
-    public ViewStats[] getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique)
+    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique)
             throws UnsupportedEncodingException {
-        ViewStats[] stats = rest.getForObject(
+        ResponseEntity<List<ViewStats>> responseEntity =
+                rest.exchange(
+                        "/stats?start=" + URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8.toString()) +
+                                "&end=" + URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8.toString()) +
+                                "&uris=" + uris +
+                                "&unique=" + unique,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {
+                        }
+                );
+        /*ViewStats[] stats = rest.getForObject(
                 "/stats?start=" + URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8.toString()) +
                         "&end=" + URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8.toString()) +
                         "&uris=" + uris, ViewStats[].class);
         if (stats == null) {
             throw new NotFoundException(String.format("По данным URL %s статистики не найдено", uris));
-        }
-        return stats;
+        }*/
+        return responseEntity.getBody();
     }
 }
 

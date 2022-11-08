@@ -22,7 +22,6 @@ import ru.practicum.main_server.repository.EventRepository;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -94,7 +93,7 @@ public class AdminEventService {
      * @return int - количество просмотров
      */
     private Integer getViewsSingleEvent(long eventId) {
-        ViewStats[] stats;
+        List<ViewStats> stats;
         try {
             stats = statClient.getStats(
                     eventRepository.getReferenceById(eventId).getCreatedOn(),
@@ -105,13 +104,13 @@ public class AdminEventService {
             throw new InternalServerErrorException("неудачная кодировка");
         }
         if (stats != null) {
-            return Arrays.asList(stats).get(0).getHits();
+            return stats.get(0).getHits();
         }
         return 0;
     }
 
     private List<Event> getViewsMultipleEvents(List<Event> events) {
-        ViewStats[] stats;
+        List<ViewStats> stats;
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
                 .collect(Collectors.toList());
@@ -124,10 +123,9 @@ public class AdminEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        List<ViewStats> statsList = Arrays.asList(stats);
-        if (!statsList.isEmpty()) {
-            for (int i = 0; i < statsList.size(); i++) {
-                events.get(i).setViews(statsList.get(i).getHits());
+        if (!stats.isEmpty()) {
+            for (int i = 0; i < stats.size(); i++) {
+                events.get(i).setViews(stats.get(i).getHits());
             }
         }
         return events;

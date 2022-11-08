@@ -14,11 +14,9 @@ import ru.practicum.main_server.model.Event;
 import ru.practicum.main_server.model.dto.CompilationDto;
 import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.CompilationRepository;
-import ru.practicum.main_server.repository.EventRepository;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -29,14 +27,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class PublicCompilationService {
     private final CompilationRepository compilationRepository;
-    private final EventRepository eventRepository;
     private final StatisticClient statClient;
 
     @Autowired
-    public PublicCompilationService(CompilationRepository compilationRepository,
-                                    EventRepository eventRepository, StatisticClient statClient) {
+    public PublicCompilationService(CompilationRepository compilationRepository, StatisticClient statClient) {
         this.compilationRepository = compilationRepository;
-        this.eventRepository = eventRepository;
         this.statClient = statClient;
     }
 
@@ -58,7 +53,7 @@ public class PublicCompilationService {
     }
 
     private List<Event> getViewsMultipleEvents(List<Event> events) {
-        ViewStats[] stats;
+        List<ViewStats> stats;
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
                 .collect(Collectors.toList());
@@ -71,10 +66,9 @@ public class PublicCompilationService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        List<ViewStats> statsList = Arrays.asList(stats);
-        if (!statsList.isEmpty()) {
-            for (int i = 0; i < statsList.size(); i++) {
-                events.get(i).setViews(statsList.get(i).getHits());
+        if (!stats.isEmpty()) {
+            for (int i = 0; i < stats.size(); i++) {
+                events.get(i).setViews(stats.get(i).getHits());
             }
         }
         return events;
