@@ -22,8 +22,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -104,7 +102,7 @@ public class StatisticClient {
                 .collect(Collectors.toList());
         try {
             stats = getStats(
-                    (Collections.min(events, Comparator.comparing(Event::getCreatedOn)).getCreatedOn()),
+                    LocalDateTime.now().minusDays(365),
                     LocalDateTime.now(),
                     uris,
                     false);
