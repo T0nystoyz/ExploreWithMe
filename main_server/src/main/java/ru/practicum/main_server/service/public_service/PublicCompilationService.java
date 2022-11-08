@@ -62,7 +62,7 @@ public class PublicCompilationService {
                 .collect(Collectors.toList());
         try {
             stats = statClient.getStats(
-                    (events.get(0).getCreatedOn()),
+                    LocalDateTime.now().minusDays(365),
                     LocalDateTime.now(),
                     uris,
                     false);
