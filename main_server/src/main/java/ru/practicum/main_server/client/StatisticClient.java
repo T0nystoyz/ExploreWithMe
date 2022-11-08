@@ -61,17 +61,17 @@ public class StatisticClient {
                                 "&unique=" + unique,
                         HttpMethod.GET,
                         null,
-                        new ParameterizedTypeReference<>() {
+                        new ParameterizedTypeReference<List<ViewStats>>() {
                         }
                 );
-        /*ViewStats[] stats = rest.getForObject(
+        return responseEntity.getBody();
+    }
+}
+
+/*ViewStats[] stats = rest.getForObject(
                 "/stats?start=" + URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8.toString()) +
                         "&end=" + URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8.toString()) +
                         "&uris=" + uris, ViewStats[].class);
         if (stats == null) {
             throw new NotFoundException(String.format("По данным URL %s статистики не найдено", uris));
         }*/
-        return responseEntity.getBody();
-    }
-}
-

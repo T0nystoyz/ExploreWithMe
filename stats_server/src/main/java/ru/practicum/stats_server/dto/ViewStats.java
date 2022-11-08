@@ -1,10 +1,17 @@
 package ru.practicum.stats_server.dto;
 
+import lombok.Builder;
+import lombok.Data;
 
-public interface ViewStats {
-    String getApp();
+import javax.validation.constraints.NotNull;
 
-    String getUri();
-
-    int getHits();
+@Data
+@Builder
+public class ViewStats {
+    @NotNull
+    private String app;
+    @NotNull
+    private String uri;
+    @NotNull
+    private int hits;
 }
