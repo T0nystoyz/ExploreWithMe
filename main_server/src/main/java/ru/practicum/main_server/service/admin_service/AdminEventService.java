@@ -202,7 +202,7 @@ public class AdminEventService {
     private LocalDateTime getEndTime(String rangeEnd) {
         LocalDateTime end;
         if (rangeEnd == null) {
-            end = LocalDateTime.MAX;
+            end = LocalDateTime.now().plusYears(5);
         } else {
             end = LocalDateTime.parse(rangeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
