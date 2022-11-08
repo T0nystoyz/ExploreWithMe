@@ -66,6 +66,7 @@ public class StatisticClient {
         log.info(":::::StatisticClient getStats-> response:{}", responseEntity);
         return responseEntity.getBody();
     }
+
     /**
      * Обращается к серверу статистики для получения кол-ва просмотров события
      *
@@ -90,6 +91,12 @@ public class StatisticClient {
         return 0;
     }
 
+    /**
+     * Обращается к серверу статистики для преобразования списка событий с полями views.
+     *
+     * @param events List
+     * @return List<Event> - события с просмотрами
+     */
     public List<Event> getEventsWithViews(List<Event> events) {
         List<ViewStats> stats;
         List<String> uris = events.stream()
