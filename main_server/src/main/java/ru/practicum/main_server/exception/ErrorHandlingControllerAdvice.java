@@ -2,6 +2,7 @@ package ru.practicum.main_server.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -17,7 +18,7 @@ import java.util.Arrays;
 @ControllerAdvice
 public class ErrorHandlingControllerAdvice {
     @ExceptionHandler({BadRequestException.class,
-            UnsupportedEncodingException.class})
+            UnsupportedEncodingException.class, MethodArgumentNotValidException.class})
     public ResponseEntity<ApiError> handleException400(Exception e) {
         ApiError apiError = new ApiError();
         apiError.setMessage(e.getMessage());
