@@ -64,6 +64,7 @@ public class StatisticClient {
                         new ParameterizedTypeReference<List<ViewStats>>() {
                         }
                 );
+        log.info(":::::StatisticClient getStats-> response:{}", responseEntity);
         return responseEntity.getBody();
     }
 }
