@@ -1,10 +1,12 @@
 package ru.practicum.main_server.controller.admin_controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.main_server.model.dto.CategoryDto;
 import ru.practicum.main_server.model.dto.NewCategoryDto;
 import ru.practicum.main_server.service.admin_service.AdminCategoryService;
-import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping(path = "/admin/categories")
@@ -17,13 +19,13 @@ public class AdminCategoryController {
     }
 
     @PostMapping
-    public CategoryDto create(@RequestBody NewCategoryDto newCategoryDto) {
+    public CategoryDto create(@RequestBody @Valid NewCategoryDto newCategoryDto) {
         log.info(":::POST /admin/categories создание новой категории {}", newCategoryDto);
         return categoryService.createCategory(newCategoryDto);
     }
 
     @PatchMapping
-    public CategoryDto update(@RequestBody CategoryDto categoryDto) {
+    public CategoryDto update(@RequestBody @Valid CategoryDto categoryDto) {
         log.info(":::PATCH /admin/categories обновление категории {}", categoryDto);
         return categoryService.updateCategory(categoryDto);
     }
