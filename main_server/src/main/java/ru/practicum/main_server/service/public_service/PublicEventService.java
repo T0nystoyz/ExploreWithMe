@@ -67,7 +67,7 @@ public class PublicEventService {
                     .sorted(Comparator.comparing(EventShortDto::getViews))
                     .collect(Collectors.toList());
         }
-        if (onlyAvailable) {
+        if (onlyAvailable != null && onlyAvailable) {
             listShortDto = listShortDto.stream()
                     .filter(eventShortDto -> eventShortDto.getConfirmedRequests()
                             < eventShortDto.getParticipationLimit())

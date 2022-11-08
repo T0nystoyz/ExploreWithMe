@@ -70,8 +70,8 @@ public class ErrorHandlingControllerAdvice {
     }
 
     @ResponseBody()
-    @ExceptionHandler(InternalServerErrorException.class)
-    public ResponseEntity<ApiError> handleException500(InternalServerErrorException e) {
+    @ExceptionHandler({InternalServerErrorException.class, RuntimeException.class})
+    public ResponseEntity<ApiError> handleException500(RuntimeException e) {
         ApiError apiError = new ApiError();
         apiError.setMessage(e.getMessage());
         apiError.setReason("Внутренняя ошибка сервера");

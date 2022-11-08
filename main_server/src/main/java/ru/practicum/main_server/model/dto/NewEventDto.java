@@ -12,7 +12,7 @@ import javax.validation.constraints.Positive;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NewEventDto {
-    @NotNull
+    @NonNull
     private String annotation;
     private long category;
     @NotNull
