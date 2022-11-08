@@ -17,6 +17,7 @@ import ru.practicum.main_server.repository.CompilationRepository;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,17 +37,21 @@ public class PublicCompilationService {
     public List<CompilationDto> readCompilations(Boolean pinned, int from, int size) {
         log.info("PublicCompilationService: Чтение компиляций pinned={}, from={}, size={}", pinned, from, size);
         if (pinned == null) {
-            return compilationRepository.findAll(PageRequest.of(from / size, size)).stream()
-                    .peek(com -> com.setEvents(getViewsMultipleEvents(com.getEvents())))
-                    .map(CompilationMapper::toCompilationDto)
-                    .collect(Collectors.toList());
+            List<Compilation> comps = compilationRepository.findAll(PageRequest.of(from / size, size)).toList();
+            List<CompilationDto> compsWithViews = new ArrayList<>();
+            for (Compilation comp : comps) {
+                comp.setEvents(getViewsMultipleEvents(comp.getEvents()));
+                compsWithViews.add(CompilationMapper.toCompilationDto(comp));
+            }
+            return compsWithViews;
         } else {
-            return compilationRepository.findAllByPinned(pinned, PageRequest.of(from / size, size))
-                    .stream()
-                    //.map(CompilationMapper::toCompilationDto)
-                    .peek(com -> com.setEvents(getViewsMultipleEvents(com.getEvents())))
-                    .map(CompilationMapper::toCompilationDto)
-                    .collect(Collectors.toList());
+            List<Compilation> comps = compilationRepository.findAllByPinned(pinned, PageRequest.of(from / size, size)).toList();
+            List<CompilationDto> compsWithViews = new ArrayList<>();
+            for (Compilation comp : comps) {
+                comp.setEvents(getViewsMultipleEvents(comp.getEvents()));
+                compsWithViews.add(CompilationMapper.toCompilationDto(comp));
+            }
+            return compsWithViews;
         }
     }
 
