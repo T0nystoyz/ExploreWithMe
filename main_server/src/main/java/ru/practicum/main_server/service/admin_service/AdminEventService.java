@@ -19,11 +19,13 @@ import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
 
-import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,7 +35,7 @@ public class AdminEventService {
     private final EventRepository eventRepository;
     private final StatisticClient statClient;
     private final CategoryRepository categoryRepository;
-    
+
     @Autowired
     public AdminEventService(EventRepository eventRepository,
                              StatisticClient statClient, CategoryRepository categoryRepository) {
@@ -91,7 +93,7 @@ public class AdminEventService {
      * @param eventId айди события
      * @return int - количество просмотров
      */
-    private @NotNull Integer getViewsSingleEvent(long eventId) {
+    private Integer getViewsSingleEvent(long eventId) {
         ViewStats[] stats;
         try {
             stats = statClient.getStats(

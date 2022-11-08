@@ -3,7 +3,6 @@ package ru.practicum.main_server.service.public_service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
@@ -16,13 +15,17 @@ import ru.practicum.main_server.model.State;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.model.dto.EventShortDto;
+import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.EventRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,10 +48,10 @@ public class PublicEventService {
         LocalDateTime start = getStartTime(rangeStart);
         LocalDateTime end = getEndTime(rangeEnd);
 
-        List<Event> events = eventRepository.searchEvents(text, categories, paid, start, end,
+        List<Event> events = getViewsMultipleEvents(eventRepository.searchEvents(text, categories, paid, start, end,
                         PageRequest.of(from / size, size))
                 .stream()
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
         if (sort.equals("EVENT_DATE")) {
             events = events.stream()
                     .sorted(Comparator.comparing(Event::getEventDate))
@@ -58,7 +61,7 @@ public class PublicEventService {
         List<EventShortDto> listShortDto = events.stream()
                 .filter(event -> event.getState().equals(State.PUBLISHED))
                 .map(EventMapper::toEventShortDto)
-                .peek(e -> e.setViews(getViews(e.getId())))
+                //.peek(e -> e.setViews(getViews(e.getId())))
                 .collect(Collectors.toList());
         if (sort.equals("VIEWS")) {
             listShortDto = listShortDto.stream()
@@ -79,7 +82,7 @@ public class PublicEventService {
         if (!(dto.getState().equals(State.PUBLISHED.toString()))) {
             throw new BadRequestException("можно посмотреть только опубликованные события");
         }
-        dto.setViews(getViews(id));
+        dto.setViews(getViewsSingleEvent(id));
         return dto;
     }
 
@@ -125,10 +128,10 @@ public class PublicEventService {
      * @param eventId айди события
      * @return int - количество просмотров
      */
-    private Integer getViews(long eventId) {
-        ResponseEntity<Object> responseEntity;
+    private Integer getViewsSingleEvent(long eventId) {
+        ViewStats[] stats;
         try {
-            responseEntity = statClient.getStats(
+            stats = statClient.getStats(
                     eventRepository.getReferenceById(eventId).getCreatedOn(),
                     LocalDateTime.now(),
                     List.of("/events/" + eventId),
@@ -136,17 +139,33 @@ public class PublicEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            Integer views = null;
-            List<Map<String, Object>> body = (List<Map<String, Object>>) responseEntity.getBody();
-            if (body != null && body.size() > 0) {
-                for (Map<String, Object> s : body) {
-                    views = (((Number) s.get("hits")).intValue());
-                }
-            }
-            return views;
+        if (stats != null) {
+            return Arrays.asList(stats).get(0).getHits();
         }
         return 0;
+    }
+
+    private List<Event> getViewsMultipleEvents(List<Event> events) {
+        ViewStats[] stats;
+        List<String> uris = events.stream()
+                .map(e -> "/events/" + e.getId())
+                .collect(Collectors.toList());
+        try {
+            stats = statClient.getStats(
+                    (Collections.min(events, Comparator.comparing(Event::getCreatedOn)).getCreatedOn()),
+                    LocalDateTime.now(),
+                    uris,
+                    false);
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalServerErrorException("неудачная кодировка");
+        }
+        List<ViewStats> statsList = Arrays.asList(stats);
+        if (!statsList.isEmpty()) {
+            for (int i = 0; i < statsList.size(); i++) {
+                events.get(i).setViews(statsList.get(i).getHits());
+            }
+        }
+        return events;
     }
 
     private Event getEventFromDbOrThrow(Long id) {

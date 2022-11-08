@@ -23,6 +23,7 @@ public class EventMapper {
                 .paid(event.isPaid())
                 .title(event.getTitle())
                 .confirmedRequests(event.getConfirmedRequests())
+                .views(event.getViews() == null ? 0 : event.getViews())
                 .build();
     }
 
