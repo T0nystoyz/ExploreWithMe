@@ -57,10 +57,7 @@ public class PublicCompilationService {
                 .collect(Collectors.toList());
         try {
             stats = statClient.getStats(
-                    (events.stream()
-                            .map(Event::getCreatedOn)
-                            .min(LocalDateTime::compareTo)
-                            .orElseThrow()),
+                    (events.get(0).getCreatedOn()),
                     LocalDateTime.now(),
                     uris,
                     false);
