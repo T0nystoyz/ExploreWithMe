@@ -100,11 +100,11 @@ public class AdminEventService {
                     LocalDateTime.now(),
                     List.of("/events/" + eventId),
                     false);
-            log.info("::::stats={}", stats.toString());
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
         if (stats != null) {
+            log.info("::::stats={}", stats);
             return stats.get(0).getHits();
         }
         return 0;
