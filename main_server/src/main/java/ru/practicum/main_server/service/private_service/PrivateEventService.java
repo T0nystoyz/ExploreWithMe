@@ -45,12 +45,6 @@ public class PrivateEventService {
 
     public List<EventShortDto> readEvents(long userId, int from, int size) {
         log.info("PrivateEventService: чтение событий userId={}, from={}, size={}", userId, from, size);
-        /*return eventRepository.findAllByInitiatorId(userId, PageRequest.of(from / size, size))
-                .stream()
-                .map(EventMapper::toEventShortDto)
-                .peek(e -> e.setViews(getViews(e.getId())))
-                .collect(Collectors.toList());*/
-
         List<Event> e = getViewsMultipleEvents(eventRepository.findAllByInitiatorId(userId,
                 PageRequest.of(from / size, size)).toList());
         return e.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
@@ -87,7 +81,9 @@ public class PrivateEventService {
     public EventFullDto readEvent(Long userId, Long eventId) {
         checkEventInitiator(userId, eventId);
         log.info("PrivateEventService: чтение пользователем с id={} события с id={}", userId, eventId);
-        return EventMapper.toEventFullDto(eventRepository.getReferenceById(eventId));
+        Event event = eventRepository.getReferenceById(eventId);
+        event.setViews(getViewsSingleEvent(eventId));
+        return EventMapper.toEventFullDto(event);
     }
 
     @Transactional

@@ -60,7 +60,6 @@ public class PublicEventService {
         List<EventShortDto> listShortDto = events.stream()
                 .filter(event -> event.getState().equals(State.PUBLISHED))
                 .map(EventMapper::toEventShortDto)
-                //.peek(e -> e.setViews(getViews(e.getId())))
                 .collect(Collectors.toList());
         if (sort != null && sort.equals("VIEWS")) {
             listShortDto = listShortDto.stream()

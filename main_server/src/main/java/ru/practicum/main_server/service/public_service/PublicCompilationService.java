@@ -77,23 +77,6 @@ public class PublicCompilationService {
         return events;
     }
 
-    /*private Integer getViews(long eventId) {
-        ResponseEntity<Object> responseEntity;
-        try {
-            responseEntity = statClient.getStats(
-                    eventRepository.getReferenceById(eventId).getCreatedOn(),
-                    LocalDateTime.now(),
-                    List.of("/events/" + eventId),
-                    false);
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalServerErrorException("неудачная кодировка");
-        }
-        if (responseEntity.getStatusCodeValue() < 300) {
-            return (Integer) ((LinkedHashMap<?, ?>) Objects.requireNonNull(responseEntity.getBody())).get("hits");
-        }
-        return 0;
-    }*/
-
     public CompilationDto readCompilation(long id) {
         CompilationDto compilationDto = CompilationMapper.toCompilationDto(getCompilationFromDbOrThrow(id));
         log.info("PublicCompilationService: Чтение компиляции по id={}", id);

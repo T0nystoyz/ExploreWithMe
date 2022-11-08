@@ -34,8 +34,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Page<Event> searchEventsByAdmin(List<Long> users, List<State> states, List<Long> categories,
                                     LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-
-    //Set<Event> findAllById(Iterable<Long> longs);
     @Override
     List<Event> findAllById(Iterable<Long> ids);
 }

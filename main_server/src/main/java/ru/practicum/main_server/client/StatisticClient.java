@@ -39,18 +39,6 @@ public class StatisticClient {
         rest.postForEntity("/hit", endpointHit, Object.class);
     }
 
-    /*public ResponseEntity<Object> getStats(LocalDateTime start, LocalDateTime end,
-                                           List<String> uris, Boolean unique) throws UnsupportedEncodingException {
-        Map<String, Object> parameters = Map.of(
-                "start", URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8.toString()),
-                "end", URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8.toString()),
-                "uris", uris,
-                "unique", unique
-        );
-        log.info(":::::StatisticClient getStats-> parameters:{}", parameters);
-        return get("/stats?start={start}&end={end}&uris={uris}&unique={unique}", parameters);
-    }*/
-
     public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique)
             throws UnsupportedEncodingException {
         ResponseEntity<List<ViewStats>> responseEntity =
@@ -61,18 +49,10 @@ public class StatisticClient {
                                 "&unique=" + unique,
                         HttpMethod.GET,
                         null,
-                        new ParameterizedTypeReference<List<ViewStats>>() {
+                        new ParameterizedTypeReference<>() {
                         }
                 );
         log.info(":::::StatisticClient getStats-> response:{}", responseEntity);
         return responseEntity.getBody();
     }
 }
-
-/*ViewStats[] stats = rest.getForObject(
-                "/stats?start=" + URLEncoder.encode(start.format(formatter), StandardCharsets.UTF_8.toString()) +
-                        "&end=" + URLEncoder.encode(end.format(formatter), StandardCharsets.UTF_8.toString()) +
-                        "&uris=" + uris, ViewStats[].class);
-        if (stats == null) {
-            throw new NotFoundException(String.format("По данным URL %s статистики не найдено", uris));
-        }*/

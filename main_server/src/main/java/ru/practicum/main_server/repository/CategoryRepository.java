@@ -9,7 +9,4 @@ import org.springframework.data.domain.Pageable;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Page<Category> findAll(Pageable pageable);
-
-    Category findCategoryById(long catId);
-
 }

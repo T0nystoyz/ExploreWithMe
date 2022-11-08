@@ -32,7 +32,7 @@ public class PublicEventController {
                                    HttpServletRequest request) {
         log.info(":::GET /events получение списка событий по параметрам: text={}, categories={}, paid={}, " +
                         "rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
-               text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
         publicEventService.sentHitStat(request);
         return publicEventService
                 .readEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
