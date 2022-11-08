@@ -6,20 +6,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
-import ru.practicum.main_server.exception.InternalServerErrorException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.CompilationMapper;
 import ru.practicum.main_server.model.Compilation;
-import ru.practicum.main_server.model.Event;
 import ru.practicum.main_server.model.dto.CompilationDto;
-import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.CompilationRepository;
 
-import java.io.UnsupportedEncodingException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,7 +34,7 @@ public class PublicCompilationService {
             List<Compilation> comps = compilationRepository.findAll(PageRequest.of(from / size, size)).toList();
             List<CompilationDto> compsWithViews = new ArrayList<>();
             for (Compilation comp : comps) {
-                comp.setEvents(getViewsMultipleEvents(comp.getEvents()));
+                comp.setEvents(statClient.getEventsWithViews(comp.getEvents()));
                 compsWithViews.add(CompilationMapper.toCompilationDto(comp));
             }
             return compsWithViews;
@@ -48,14 +42,14 @@ public class PublicCompilationService {
             List<Compilation> comps = compilationRepository.findAllByPinned(pinned, PageRequest.of(from / size, size)).toList();
             List<CompilationDto> compsWithViews = new ArrayList<>();
             for (Compilation comp : comps) {
-                comp.setEvents(getViewsMultipleEvents(comp.getEvents()));
+                comp.setEvents(statClient.getEventsWithViews(comp.getEvents()));
                 compsWithViews.add(CompilationMapper.toCompilationDto(comp));
             }
             return compsWithViews;
         }
     }
 
-    private List<Event> getViewsMultipleEvents(List<Event> events) {
+    /*private List<Event> getViewsMultipleEvents(List<Event> events) {
         List<ViewStats> stats;
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
@@ -75,7 +69,7 @@ public class PublicCompilationService {
             }
         }
         return events;
-    }
+    }*/
 
     public CompilationDto readCompilation(long id) {
         CompilationDto compilationDto = CompilationMapper.toCompilationDto(getCompilationFromDbOrThrow(id));

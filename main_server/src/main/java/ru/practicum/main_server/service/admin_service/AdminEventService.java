@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
 import ru.practicum.main_server.exception.ForbiddenException;
-import ru.practicum.main_server.exception.InternalServerErrorException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
 import ru.practicum.main_server.model.Category;
@@ -15,15 +14,11 @@ import ru.practicum.main_server.model.Event;
 import ru.practicum.main_server.model.State;
 import ru.practicum.main_server.model.dto.AdminUpdateEventRequest;
 import ru.practicum.main_server.model.dto.EventFullDto;
-import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
 
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +43,7 @@ public class AdminEventService {
         LocalDateTime start = getStartTime(rangeStart);
         LocalDateTime end = getEndTime(rangeEnd);
         log.info("AdminEventService: чтение всех событий, from: {}, size: {}", from, size);
-        List<Event> e = getViewsMultipleEvents(eventRepository.searchEventsByAdmin(users, states, categories, start,
+        List<Event> e = statClient.getEventsWithViews(eventRepository.searchEventsByAdmin(users, states, categories, start,
                 end, PageRequest.of(from / size, size)).toList());
         return e.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
     }
@@ -57,7 +52,7 @@ public class AdminEventService {
         Event event = getEventFromAdminRequest(eventId, adminUpdateEventRequest);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
-        eventFullDto.setViews(getViewsSingleEvent(eventId));
+        eventFullDto.setViews(statClient.getViewsSingleEvent(eventId));
         log.info("AdminEventService: обновление события с id={}, запрос: {}", eventId, adminUpdateEventRequest);
         return eventFullDto;
     }
@@ -74,7 +69,7 @@ public class AdminEventService {
         event.setState(State.PUBLISHED);
         event = eventRepository.save(event);
         EventFullDto dto = EventMapper.toEventFullDto(event);
-        dto.setViews(getViewsSingleEvent(eventId));
+        dto.setViews(statClient.getViewsSingleEvent(eventId));
         return dto;
     }
 
@@ -86,13 +81,8 @@ public class AdminEventService {
         return EventMapper.toEventFullDto(event);
     }
 
-    /**
-     * Возвращает кол-во просмотров события
-     *
-     * @param eventId айди события
-     * @return int - количество просмотров
-     */
-    private Integer getViewsSingleEvent(long eventId) {
+
+    /*private Integer getViewsSingleEvent(long eventId) {
         List<ViewStats> stats;
         try {
             stats = statClient.getStats(
@@ -130,7 +120,7 @@ public class AdminEventService {
             }
         }
         return events;
-    }
+    }*/
 
     /**
      * Возвращает событие из запроса админа

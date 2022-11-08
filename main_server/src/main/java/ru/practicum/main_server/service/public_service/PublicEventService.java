@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
 import ru.practicum.main_server.exception.BadRequestException;
-import ru.practicum.main_server.exception.InternalServerErrorException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
 import ru.practicum.main_server.model.Event;
@@ -15,14 +14,11 @@ import ru.practicum.main_server.model.State;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.model.dto.EventShortDto;
-import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.EventRepository;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +43,7 @@ public class PublicEventService {
         LocalDateTime start = getStartTime(rangeStart);
         LocalDateTime end = getEndTime(rangeEnd);
 
-        List<Event> events = getViewsMultipleEvents(eventRepository.searchEvents(text, categories, paid, start, end,
+        List<Event> events = statClient.getEventsWithViews(eventRepository.searchEvents(text, categories, paid, start, end,
                         PageRequest.of(from / size, size))
                 .stream()
                 .collect(Collectors.toList()));
@@ -80,7 +76,7 @@ public class PublicEventService {
         if (!(dto.getState().equals(State.PUBLISHED.toString()))) {
             throw new BadRequestException("можно посмотреть только опубликованные события");
         }
-        dto.setViews(getViewsSingleEvent(id));
+        dto.setViews(statClient.getViewsSingleEvent(id));
         return dto;
     }
 
@@ -120,13 +116,8 @@ public class PublicEventService {
         return start;
     }
 
-    /**
-     * Обращается к серверу статистики для получения кол-ва просмотров события
-     *
-     * @param eventId айди события
-     * @return int - количество просмотров
-     */
-    private Integer getViewsSingleEvent(long eventId) {
+
+    /*private Integer getViewsSingleEvent(long eventId) {
         List<ViewStats> stats;
         try {
             stats = statClient.getStats(
@@ -142,9 +133,9 @@ public class PublicEventService {
             return stats.get(0).getHits();
         }
         return 0;
-    }
+    }*/
 
-    private List<Event> getViewsMultipleEvents(List<Event> events) {
+    /*private List<Event> getViewsMultipleEvents(List<Event> events) {
         List<ViewStats> stats;
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
@@ -164,7 +155,7 @@ public class PublicEventService {
             }
         }
         return events;
-    }
+    }*/
 
     private Event getEventFromDbOrThrow(Long id) {
         return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(

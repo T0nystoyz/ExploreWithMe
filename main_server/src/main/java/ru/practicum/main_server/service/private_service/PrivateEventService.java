@@ -7,20 +7,19 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
 import ru.practicum.main_server.exception.BadRequestException;
 import ru.practicum.main_server.exception.ForbiddenException;
-import ru.practicum.main_server.exception.InternalServerErrorException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
 import ru.practicum.main_server.model.*;
-import ru.practicum.main_server.model.dto.*;
+import ru.practicum.main_server.model.dto.EventFullDto;
+import ru.practicum.main_server.model.dto.EventShortDto;
+import ru.practicum.main_server.model.dto.NewEventDto;
+import ru.practicum.main_server.model.dto.UpdateEventRequest;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
 import ru.practicum.main_server.repository.UserRepository;
 
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,7 +44,7 @@ public class PrivateEventService {
 
     public List<EventShortDto> readEvents(long userId, int from, int size) {
         log.info("PrivateEventService: чтение событий userId={}, from={}, size={}", userId, from, size);
-        List<Event> e = getViewsMultipleEvents(eventRepository.findAllByInitiatorId(userId,
+        List<Event> e = statClient.getEventsWithViews(eventRepository.findAllByInitiatorId(userId,
                 PageRequest.of(from / size, size)).toList());
         return e.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
@@ -55,7 +54,7 @@ public class PrivateEventService {
         Event event = getEventFromRequest(userId, updateEventRequest);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
-        eventFullDto.setViews(getViewsSingleEvent(updateEventRequest.getEventId()));
+        eventFullDto.setViews(statClient.getViewsSingleEvent(updateEventRequest.getEventId()));
         log.info("PrivateEventService: событие обновлено userId={}, newEvent={}", userId, updateEventRequest);
         return eventFullDto;
     }
@@ -82,7 +81,7 @@ public class PrivateEventService {
         checkEventInitiator(userId, eventId);
         log.info("PrivateEventService: чтение пользователем с id={} события с id={}", userId, eventId);
         Event event = eventRepository.getReferenceById(eventId);
-        event.setViews(getViewsSingleEvent(eventId));
+        event.setViews(statClient.getViewsSingleEvent(eventId));
         return EventMapper.toEventFullDto(event);
     }
 
@@ -92,18 +91,13 @@ public class PrivateEventService {
         checkEventInitiator(userId, eventId);
         event.setState(State.CANCELED);
         event = eventRepository.save(event);
-        event.setViews(getViewsSingleEvent(eventId));
+        event.setViews(statClient.getViewsSingleEvent(eventId));
         log.info("PrivateEventService: событие id={} отменено пользователем с id={}", eventId, userId);
         return EventMapper.toEventFullDto(event);
     }
 
-    /**
-     * Возвращает кол-во просмотров события
-     *
-     * @param eventId айди события
-     * @return int - количество просмотров
-     */
-    private Integer getViewsSingleEvent(long eventId) {
+
+    /*private Integer getViewsSingleEvent(long eventId) {
         List<ViewStats> stats;
         try {
             stats = statClient.getStats(
@@ -119,9 +113,9 @@ public class PrivateEventService {
             return stats.get(0).getHits();
         }
         return 0;
-    }
+    }*/
 
-    private List<Event> getViewsMultipleEvents(List<Event> events) {
+    /*private List<Event> getViewsMultipleEvents(List<Event> events) {
         List<ViewStats> stats;
         List<String> uris = events.stream()
                 .map(e -> "/events/" + e.getId())
@@ -141,7 +135,7 @@ public class PrivateEventService {
             }
         }
         return events;
-    }
+    }*/
 
     /**
      * Возвращает событие из запроса
