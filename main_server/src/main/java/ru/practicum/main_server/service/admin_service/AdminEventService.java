@@ -3,7 +3,6 @@ package ru.practicum.main_server.service.admin_service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.main_server.client.StatisticClient;
@@ -16,14 +15,15 @@ import ru.practicum.main_server.model.Event;
 import ru.practicum.main_server.model.State;
 import ru.practicum.main_server.model.dto.AdminUpdateEventRequest;
 import ru.practicum.main_server.model.dto.EventFullDto;
+import ru.practicum.main_server.model.dto.ViewStats;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
 
+import javax.validation.constraints.NotNull;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,8 +33,7 @@ public class AdminEventService {
     private final EventRepository eventRepository;
     private final StatisticClient statClient;
     private final CategoryRepository categoryRepository;
-
-
+    
     @Autowired
     public AdminEventService(EventRepository eventRepository,
                              StatisticClient statClient, CategoryRepository categoryRepository) {
@@ -48,19 +47,16 @@ public class AdminEventService {
         LocalDateTime start = getStartTime(rangeStart);
         LocalDateTime end = getEndTime(rangeEnd);
         log.info("AdminEventService: чтение всех событий, from: {}, size: {}", from, size);
-        return eventRepository.searchEventsByAdmin(users, states, categories, start, end,
-                        PageRequest.of(from / size, size))
-                .stream()
-                .map(EventMapper::toEventFullDto)
-                .peek(e -> e.setViews(getViews(e.getId())))
-                .collect(Collectors.toList());
+        List<Event> e = getViewsMultipleEvents(eventRepository.searchEventsByAdmin(users, states, categories, start,
+                end, PageRequest.of(from / size, size)).toList());
+        return e.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
     }
 
     public EventFullDto updateEvent(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
         Event event = getEventFromAdminRequest(eventId, adminUpdateEventRequest);
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
-        eventFullDto.setViews(getViews(eventId));
+        eventFullDto.setViews(getViewsSingleEvent(eventId));
         log.info("AdminEventService: обновление события с id={}, запрос: {}", eventId, adminUpdateEventRequest);
         return eventFullDto;
     }
@@ -77,7 +73,7 @@ public class AdminEventService {
         event.setState(State.PUBLISHED);
         event = eventRepository.save(event);
         EventFullDto dto = EventMapper.toEventFullDto(event);
-        dto.setViews(getViews(eventId));
+        dto.setViews(getViewsSingleEvent(eventId));
         return dto;
     }
 
@@ -95,10 +91,10 @@ public class AdminEventService {
      * @param eventId айди события
      * @return int - количество просмотров
      */
-    private Integer getViews(long eventId) {
-        ResponseEntity<Object> responseEntity;
+    private @NotNull Integer getViewsSingleEvent(long eventId) {
+        ViewStats[] stats;
         try {
-            responseEntity = statClient.getStats(
+            stats = statClient.getStats(
                     eventRepository.getReferenceById(eventId).getCreatedOn(),
                     LocalDateTime.now(),
                     List.of("/events/" + eventId),
@@ -106,17 +102,33 @@ public class AdminEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            Integer views = null;
-            List<Map<String, Object>> body = (List<Map<String, Object>>) responseEntity.getBody();
-            if (body != null && body.size() > 0) {
-                for (Map<String, Object> s : body) {
-                    views = (((Number) s.get("hits")).intValue());
-                }
-            }
-            return views;
+        if (stats != null) {
+            return Arrays.asList(stats).get(0).getHits();
         }
         return 0;
+    }
+
+    private List<Event> getViewsMultipleEvents(List<Event> events) {
+        ViewStats[] stats;
+        List<String> uris = events.stream()
+                .map(e -> "/events/" + e.getId())
+                .collect(Collectors.toList());
+        try {
+            stats = statClient.getStats(
+                    (Collections.min(events, Comparator.comparing(Event::getCreatedOn)).getCreatedOn()),
+                    LocalDateTime.now(),
+                    uris,
+                    false);
+        } catch (UnsupportedEncodingException e) {
+            throw new InternalServerErrorException("неудачная кодировка");
+        }
+        List<ViewStats> statsList = Arrays.asList(stats);
+        if (!statsList.isEmpty()) {
+            for (int i = 0; i < statsList.size(); i++) {
+                events.get(i).setViews(statsList.get(i).getHits());
+            }
+        }
+        return events;
     }
 
     /**

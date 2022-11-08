@@ -45,4 +45,6 @@ public class Event {
     private String title;
     @Column(name = "confirmed_requests")
     private Integer confirmedRequests;
+    @Transient
+    private Integer views;
 }

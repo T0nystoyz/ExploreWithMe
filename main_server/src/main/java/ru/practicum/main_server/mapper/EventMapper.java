@@ -44,6 +44,7 @@ public class EventMapper {
                 .requestModeration(event.isRequestModeration())
                 .state(event.getState().toString())
                 .confirmedRequests(event.getConfirmedRequests())
+                .views(event.getViews() == null ? 0 : event.getViews())
                 .build();
     }
 

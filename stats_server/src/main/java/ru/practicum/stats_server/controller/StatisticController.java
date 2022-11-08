@@ -33,7 +33,7 @@ public class StatisticController {
                                         @RequestParam String end,
                                         @RequestParam List<String> uris,
                                         @RequestParam(defaultValue = "false") Boolean unique) {
-        log.info(":::GET /stats StatisticController: получение статистики по адресам: {}, start={}, end={}", uris, start,end);
+        log.info(":::GET /stats StatisticController: получение статистики по адресам: {}, start={}, end={}", uris, start, end);
         return statisticService.getViewStats(start, end, uris, unique);
     }
 }
