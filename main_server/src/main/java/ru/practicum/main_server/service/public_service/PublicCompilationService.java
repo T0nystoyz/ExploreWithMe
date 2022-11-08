@@ -17,8 +17,6 @@ import ru.practicum.main_server.repository.CompilationRepository;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,7 +57,10 @@ public class PublicCompilationService {
                 .collect(Collectors.toList());
         try {
             stats = statClient.getStats(
-                    (Collections.min(events, Comparator.comparing(Event::getCreatedOn)).getCreatedOn()),
+                    (events.stream()
+                            .map(Event::getCreatedOn)
+                            .min(LocalDateTime::compareTo)
+                            .orElseThrow()),
                     LocalDateTime.now(),
                     uris,
                     false);
