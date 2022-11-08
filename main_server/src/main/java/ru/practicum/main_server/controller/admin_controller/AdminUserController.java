@@ -1,11 +1,12 @@
 package ru.practicum.main_server.controller.admin_controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 import ru.practicum.main_server.model.dto.NewUserRequest;
 import ru.practicum.main_server.model.dto.UserDto;
 import ru.practicum.main_server.service.admin_service.AdminUserService;
-import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
@@ -22,7 +23,7 @@ public class AdminUserController {
     }
 
     @PostMapping
-    public UserDto createUser(@RequestBody NewUserRequest newUserRequest) {
+    public UserDto createUser(@RequestBody @Valid NewUserRequest newUserRequest) {
         log.info(":::POST /admin/users создание нового пользователя {}", newUserRequest);
         return adminUserService.createUser(newUserRequest);
     }

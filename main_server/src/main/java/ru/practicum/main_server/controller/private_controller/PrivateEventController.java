@@ -6,6 +6,7 @@ import ru.practicum.main_server.model.dto.*;
 import ru.practicum.main_server.service.private_service.PrivateEventService;
 import ru.practicum.main_server.service.private_service.PrivateParticipationRequestService;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -23,7 +24,7 @@ public class PrivateEventController {
 
     @PostMapping
     public EventFullDto createEvent(@PathVariable Long userId,
-                                    @RequestBody NewEventDto newEventDto) {
+                                    @RequestBody @Valid NewEventDto newEventDto) {
         log.info(":::POST /users/{}/events создание события пользователя ", userId);
         return privateEventService.createEvent(userId, newEventDto);
     }

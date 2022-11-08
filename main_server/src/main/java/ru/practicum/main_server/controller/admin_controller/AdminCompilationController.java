@@ -6,6 +6,8 @@ import ru.practicum.main_server.model.dto.CompilationDto;
 import ru.practicum.main_server.model.dto.NewCompilationDto;
 import ru.practicum.main_server.service.admin_service.AdminCompilationService;
 
+import javax.validation.Valid;
+
 
 @RestController
 @RequestMapping(path = "admin/compilations")
@@ -18,7 +20,7 @@ public class AdminCompilationController {
     }
 
     @PostMapping
-    public CompilationDto createCompilation(@RequestBody NewCompilationDto newCompilationDto) {
+    public CompilationDto createCompilation(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         log.info(":::POST admin/compilations создание подборки {}", newCompilationDto);
         return service.createCompilation(newCompilationDto);
     }
