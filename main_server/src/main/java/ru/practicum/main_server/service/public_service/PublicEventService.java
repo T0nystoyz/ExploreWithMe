@@ -51,7 +51,7 @@ public class PublicEventService {
                         PageRequest.of(from / size, size))
                 .stream()
                 .collect(Collectors.toList()));
-        if (sort.equals("EVENT_DATE")) {
+        if (sort != null && sort.equals("EVENT_DATE")) {
             events = events.stream()
                     .sorted(Comparator.comparing(Event::getEventDate))
                     .collect(Collectors.toList());
@@ -62,7 +62,7 @@ public class PublicEventService {
                 .map(EventMapper::toEventShortDto)
                 //.peek(e -> e.setViews(getViews(e.getId())))
                 .collect(Collectors.toList());
-        if (sort.equals("VIEWS")) {
+        if (sort != null && sort.equals("VIEWS")) {
             listShortDto = listShortDto.stream()
                     .sorted(Comparator.comparing(EventShortDto::getViews))
                     .collect(Collectors.toList());
