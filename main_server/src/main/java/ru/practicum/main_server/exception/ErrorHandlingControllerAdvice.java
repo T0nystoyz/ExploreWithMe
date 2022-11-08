@@ -2,11 +2,14 @@ package ru.practicum.main_server.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 import ru.practicum.main_server.model.dto.ApiError;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -53,7 +56,7 @@ public class ErrorHandlingControllerAdvice {
         return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({ConflictException.class, ConstraintViolationException.class})
+    @ExceptionHandler({ConflictException.class, ConstraintViolationException.class, ValidationException.class})
     public ResponseEntity<ApiError> handleException409(Exception e) {
         ApiError apiError = new ApiError();
         apiError.setMessage(e.getMessage());
