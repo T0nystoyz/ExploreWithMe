@@ -116,47 +116,6 @@ public class PublicEventService {
         return start;
     }
 
-
-    /*private Integer getViewsSingleEvent(long eventId) {
-        List<ViewStats> stats;
-        try {
-            stats = statClient.getStats(
-                    eventRepository.getReferenceById(eventId).getCreatedOn(),
-                    LocalDateTime.now(),
-                    List.of("/events/" + eventId),
-                    false);
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalServerErrorException("неудачная кодировка");
-        }
-        if (!stats.isEmpty()) {
-            log.info("::::stats={}", stats);
-            return stats.get(0).getHits();
-        }
-        return 0;
-    }*/
-
-    /*private List<Event> getViewsMultipleEvents(List<Event> events) {
-        List<ViewStats> stats;
-        List<String> uris = events.stream()
-                .map(e -> "/events/" + e.getId())
-                .collect(Collectors.toList());
-        try {
-            stats = statClient.getStats(
-                    (Collections.min(events, Comparator.comparing(Event::getCreatedOn)).getCreatedOn()),
-                    LocalDateTime.now(),
-                    uris,
-                    false);
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalServerErrorException("неудачная кодировка");
-        }
-        if (!stats.isEmpty()) {
-            for (int i = 0; i < stats.size(); i++) {
-                events.get(i).setViews(stats.get(i).getHits());
-            }
-        }
-        return events;
-    }*/
-
     private Event getEventFromDbOrThrow(Long id) {
         return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(
                 String.format("AdminCompilationService: события по id=%d нет в базе", id)));
