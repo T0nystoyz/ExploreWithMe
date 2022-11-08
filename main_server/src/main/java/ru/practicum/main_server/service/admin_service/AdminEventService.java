@@ -103,7 +103,7 @@ public class AdminEventService {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
-        if (stats != null) {
+        if (!stats.isEmpty()) {
             log.info("::::stats={}", stats);
             return stats.get(0).getHits();
         }
