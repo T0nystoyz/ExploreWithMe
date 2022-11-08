@@ -21,11 +21,11 @@ public class AdminEventController {
     }
 
     @GetMapping
-    public List<EventFullDto> readEvents(@RequestParam List<Long> users,
-                                         @RequestParam List<State> states,
-                                         @RequestParam List<Long> categories,
-                                         @RequestParam String rangeStart,
-                                         @RequestParam String rangeEnd,
+    public List<EventFullDto> readEvents(@RequestParam (required = false) List<Long> users,
+                                         @RequestParam (required = false) List<State> states,
+                                         @RequestParam (required = false) List<Long> categories,
+                                         @RequestParam (required = false) String rangeStart,
+                                         @RequestParam (required = false) String rangeEnd,
                                          @PositiveOrZero @RequestParam(defaultValue = "0", required = false) int from,
                                          @Positive @RequestParam(defaultValue = "10", required = false) int size) {
         log.info(":::GET /admin/events получение списка событий по параметрам: айди пользователей={}," +
