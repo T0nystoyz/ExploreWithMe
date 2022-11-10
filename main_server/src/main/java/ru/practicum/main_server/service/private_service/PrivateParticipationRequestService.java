@@ -88,12 +88,12 @@ public class PrivateParticipationRequestService {
         if (!participation.getStatus().equals(Status.PENDING)) {
             throw new ForbiddenException("чтобы принять запрос, он должен быть в статусе PENDING");
         }
-        if (event.getParticipantLimit() <= event.getConfirmedRequests()) {
+        if (event.getConfirmedRequests() != null && event.getParticipantLimit() <= event.getConfirmedRequests()) {
             participation.setStatus(Status.REJECTED);
         }
         participation.setStatus(Status.CONFIRMED);
-        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-        eventRepository.save(event);
+        //event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        //eventRepository.save(event);
         return ParticipationRequestMapper.toParticipationRequestDto(participationRepository.save(participation));
     }
 
@@ -124,8 +124,8 @@ public class PrivateParticipationRequestService {
         if (!(event.getState().equals(State.PUBLISHED))) {
             throw new ForbiddenException("невозможно создать запрос на неопубликованное событие");
         }
-        if (event.getParticipantLimit() != null && event.getParticipantLimit() != 0 && event
-                .getParticipantLimit() <= event.getConfirmedRequests()) {
+        if (event.getParticipantLimit() != null && event.getConfirmedRequests() != null
+                && event.getParticipantLimit() != 0 && event.getParticipantLimit() <= event.getConfirmedRequests()) {
             throw new ForbiddenException(String.format("превышено количество участников события - %d",
                     event.getConfirmedRequests()));
         }

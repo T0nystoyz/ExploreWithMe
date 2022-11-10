@@ -9,7 +9,10 @@ import ru.practicum.main_server.client.StatisticClient;
 import ru.practicum.main_server.exception.ForbiddenException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
-import ru.practicum.main_server.model.*;
+import ru.practicum.main_server.model.Category;
+import ru.practicum.main_server.model.Event;
+import ru.practicum.main_server.model.ParticipationRequest;
+import ru.practicum.main_server.model.State;
 import ru.practicum.main_server.model.dto.AdminUpdateEventRequest;
 import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.repository.CategoryRepository;
@@ -21,9 +24,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static ru.practicum.main_server.model.Status.*;
+import static ru.practicum.main_server.model.Status.CONFIRMED;
 
 @Service
 @Slf4j
@@ -51,7 +55,9 @@ public class AdminEventService {
         log.info("AdminEventService: чтение всех событий, from: {}, size: {}", from, size);
         List<Event> e = statClient.getEventsWithViews(eventRepository.searchEventsByAdmin(users, states, categories,
                 start, end, PageRequest.of(from / size, size)).toList());
+        log.info("////eventsWithViews{}", e);
         List<Event> eventsWithRequests = getEventsWithConfirmedRequests(e);
+        log.info("////eventsWithRequests{}", eventsWithRequests);
         return eventsWithRequests.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
     }
 
@@ -170,16 +176,20 @@ public class AdminEventService {
      * @return List событий с полями confirmedRequests
      */
     private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
-        List<Event> eventsWithRequests = new ArrayList<>();
+        Map<Long, Event> eventsWithRequests = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
         Map<Event, Long> countedRequests = participationRequestRepository
                 .findByStatusAndEvent(CONFIRMED, events).stream()
                 .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
+        if (countedRequests.isEmpty()) {
+            return events;
+        }
         for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
             Event e = entry.getKey();
             e.setConfirmedRequests(entry.getValue());
-            eventsWithRequests.add(e);
+            eventsWithRequests.put(e.getId(), e);
         }
-        return eventsWithRequests;
+        log.info("////eventsWithRequests{}",eventsWithRequests);
+        return new ArrayList<>(eventsWithRequests.values());
     }
 
     private Event getEventFromDbOrThrow(Long id) {

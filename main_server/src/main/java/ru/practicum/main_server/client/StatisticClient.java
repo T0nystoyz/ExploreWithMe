@@ -114,6 +114,7 @@ public class StatisticClient {
         }
 
         if (!stats.isEmpty()) {
+            log.info("stats не пустой");
             Map<Long, Event> eventsMap = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
             Map<String, Integer> statsMap = stats.stream()
                     .collect(Collectors.toMap(ViewStats::getUri, ViewStats::getHits));
@@ -125,6 +126,7 @@ public class StatisticClient {
             }
             return new ArrayList<>(eventsMap.values());
         }
+        log.info("stats пустой");
         return events;
     }
 

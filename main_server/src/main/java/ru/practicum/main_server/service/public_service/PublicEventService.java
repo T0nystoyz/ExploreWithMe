@@ -26,7 +26,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static ru.practicum.main_server.model.Status.CONFIRMED;
 
 @Service
 @Slf4j
@@ -133,7 +136,7 @@ public class PublicEventService {
      * @param events список событий
      * @return List событий с полями confirmedRequests
      */
-    private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
+    /*private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
         List<Event> eventsWithRequests = new ArrayList<>();
         Map<Event, Long> countedRequests = participationRequestRepository
                 .findByStatusAndEvent(Status.CONFIRMED, events).stream()
@@ -143,6 +146,23 @@ public class PublicEventService {
             e.setConfirmedRequests(entry.getValue());
             eventsWithRequests.add(e);
         }
+        log.info("////eventsWithRequests{}",eventsWithRequests);
         return eventsWithRequests;
+    }*/
+    private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
+        Map<Long, Event> eventsWithRequests = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
+        Map<Event, Long> countedRequests = participationRequestRepository
+                .findByStatusAndEvent(CONFIRMED, events).stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
+        if (countedRequests.isEmpty()) {
+            return events;
+        }
+        for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
+            Event e = entry.getKey();
+            e.setConfirmedRequests(entry.getValue());
+            eventsWithRequests.put(e.getId(), e);
+        }
+        log.info("////eventsWithRequests{}",eventsWithRequests);
+        return new ArrayList<>(eventsWithRequests.values());
     }
 }
