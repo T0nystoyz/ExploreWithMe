@@ -159,7 +159,7 @@ public class PrivateEventService {
     private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
         List<Event> eventsWithRequests = new ArrayList<>();
         Map<Event, Long> countedRequests = participationRequestRepository
-                .findByStatusAndEvents(Status.CONFIRMED, events).stream()
+                .findByStatusAndEvent(Status.CONFIRMED, events).stream()
                 .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
         for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
             Event e = entry.getKey();
