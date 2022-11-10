@@ -19,7 +19,7 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
 
     ParticipationRequest getReferenceById(Long requestId);
 
-    @Query("select r from Request r where r.status = ?1 and r.event in :events")
+    @Query("select r from Request as r where r.status = ?1 and (r.event in :events)")
     List<ParticipationRequest> findByStatusAndEvents(Status status, List<Event> events);
 
     Long countByEventIdAndStatus(Long eventId, Status status);
