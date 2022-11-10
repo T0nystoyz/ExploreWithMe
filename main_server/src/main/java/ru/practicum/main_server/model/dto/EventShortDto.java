@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class EventShortDto {
     private String annotation;
     private CategoryDto category;
-    private Integer confirmedRequests;
+    private Long confirmedRequests;
     private Integer participationLimit;
     private String eventDate;
     private Long id;

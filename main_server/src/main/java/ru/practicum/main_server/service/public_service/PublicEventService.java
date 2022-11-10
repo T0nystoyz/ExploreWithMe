@@ -10,17 +10,22 @@ import ru.practicum.main_server.exception.BadRequestException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
 import ru.practicum.main_server.model.Event;
+import ru.practicum.main_server.model.ParticipationRequest;
 import ru.practicum.main_server.model.State;
+import ru.practicum.main_server.model.Status;
 import ru.practicum.main_server.model.dto.EndpointHitDto;
 import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.model.dto.EventShortDto;
 import ru.practicum.main_server.repository.EventRepository;
+import ru.practicum.main_server.repository.ParticipationRequestRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,13 +34,16 @@ import java.util.stream.Collectors;
 public class PublicEventService {
     private final EventRepository eventRepository;
     private final StatisticClient statClient;
+    private final ParticipationRequestRepository participationRequestRepository;
 
 
     @Autowired
     public PublicEventService(EventRepository eventRepository,
-                              StatisticClient statClient) {
+                              StatisticClient statClient, ParticipationRequestRepository participationRequestRepository)
+    {
         this.eventRepository = eventRepository;
         this.statClient = statClient;
+        this.participationRequestRepository = participationRequestRepository;
     }
 
     public List<EventShortDto> readEvents(String text, List<Long> categories, Boolean paid, String rangeStart,
@@ -43,17 +51,16 @@ public class PublicEventService {
         LocalDateTime start = getStartTime(rangeStart);
         LocalDateTime end = getEndTime(rangeEnd);
 
-        List<Event> events = statClient.getEventsWithViews(eventRepository.searchEvents(text, categories, paid, start, end,
-                        PageRequest.of(from / size, size))
-                .stream()
-                .collect(Collectors.toList()));
+        List<Event> events = statClient.getEventsWithViews(eventRepository.searchEvents(text, categories, paid, start,
+                end, PageRequest.of(from / size, size)).stream().collect(Collectors.toList()));
+        List<Event> eventsWithRequests = getEventsWithConfirmedRequests(events);
         if (sort != null && sort.equals("EVENT_DATE")) {
-            events = events.stream()
+            eventsWithRequests = eventsWithRequests.stream()
                     .sorted(Comparator.comparing(Event::getEventDate))
                     .collect(Collectors.toList());
         }
 
-        List<EventShortDto> listShortDto = events.stream()
+        List<EventShortDto> listShortDto = eventsWithRequests.stream()
                 .filter(event -> event.getState().equals(State.PUBLISHED))
                 .map(EventMapper::toEventShortDto)
                 .collect(Collectors.toList());
@@ -77,6 +84,7 @@ public class PublicEventService {
             throw new BadRequestException("можно посмотреть только опубликованные события");
         }
         dto.setViews(statClient.getViewsSingleEvent(id));
+        dto.setConfirmedRequests(participationRequestRepository.countByEventIdAndStatus(id, Status.CONFIRMED));
         return dto;
     }
 
@@ -119,5 +127,22 @@ public class PublicEventService {
     private Event getEventFromDbOrThrow(Long id) {
         return eventRepository.findById(id).orElseThrow(() -> new NotFoundException(
                 String.format("AdminCompilationService: события по id=%d нет в базе", id)));
+    }
+
+    /**
+     * @param events список событий
+     * @return List событий с полями confirmedRequests
+     */
+    private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
+        List<Event> eventsWithRequests = new ArrayList<>();
+        Map<Event, Long> countedRequests = participationRequestRepository
+                .findByStatusAndEvents(Status.CONFIRMED, events).stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
+        for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
+            Event e = entry.getKey();
+            e.setConfirmedRequests(entry.getValue());
+            eventsWithRequests.add(e);
+        }
+        return eventsWithRequests;
     }
 }

@@ -20,7 +20,7 @@ public class PublicEventController {
     }
 
     @GetMapping()
-    List<EventShortDto> readEvents(@RequestParam(required = false) String text,
+    public List<EventShortDto> readEvents(@RequestParam(required = false) String text,
                                    @RequestParam(required = false) List<Long> categories,
                                    @RequestParam(required = false) Boolean paid,
                                    @RequestParam(required = false) String rangeStart,
@@ -39,7 +39,7 @@ public class PublicEventController {
     }
 
     @GetMapping("/{id}")
-    EventFullDto readEvent(@PathVariable long id, HttpServletRequest request) {
+    public EventFullDto readEvent(@PathVariable long id, HttpServletRequest request) {
         log.info(":::GET /events/{} чтение по id", id);
         publicEventService.sentHitStat(request);
         return publicEventService.readEvent(id);

@@ -9,18 +9,21 @@ import ru.practicum.main_server.client.StatisticClient;
 import ru.practicum.main_server.exception.ForbiddenException;
 import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.EventMapper;
-import ru.practicum.main_server.model.Category;
-import ru.practicum.main_server.model.Event;
-import ru.practicum.main_server.model.State;
+import ru.practicum.main_server.model.*;
 import ru.practicum.main_server.model.dto.AdminUpdateEventRequest;
 import ru.practicum.main_server.model.dto.EventFullDto;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
+import ru.practicum.main_server.repository.ParticipationRequestRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static ru.practicum.main_server.model.Status.*;
 
 @Service
 @Slf4j
@@ -29,13 +32,16 @@ public class AdminEventService {
     private final EventRepository eventRepository;
     private final StatisticClient statClient;
     private final CategoryRepository categoryRepository;
+    private final ParticipationRequestRepository participationRequestRepository;
 
     @Autowired
     public AdminEventService(EventRepository eventRepository,
-                             StatisticClient statClient, CategoryRepository categoryRepository) {
+                             StatisticClient statClient, CategoryRepository categoryRepository,
+                             ParticipationRequestRepository participationRequestRepository) {
         this.eventRepository = eventRepository;
         this.statClient = statClient;
         this.categoryRepository = categoryRepository;
+        this.participationRequestRepository = participationRequestRepository;
     }
 
     public List<EventFullDto> readEvents(List<Long> users, List<State> states, List<Long> categories,
@@ -43,9 +49,10 @@ public class AdminEventService {
         LocalDateTime start = getStartTime(rangeStart);
         LocalDateTime end = getEndTime(rangeEnd);
         log.info("AdminEventService: чтение всех событий, from: {}, size: {}", from, size);
-        List<Event> e = statClient.getEventsWithViews(eventRepository.searchEventsByAdmin(users, states, categories, start,
-                end, PageRequest.of(from / size, size)).toList());
-        return e.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
+        List<Event> e = statClient.getEventsWithViews(eventRepository.searchEventsByAdmin(users, states, categories,
+                start, end, PageRequest.of(from / size, size)).toList());
+        List<Event> eventsWithRequests = getEventsWithConfirmedRequests(e);
+        return eventsWithRequests.stream().map(EventMapper::toEventFullDto).collect(Collectors.toList());
     }
 
     public EventFullDto updateEvent(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
@@ -53,6 +60,7 @@ public class AdminEventService {
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         eventFullDto.setViews(statClient.getViewsSingleEvent(eventId));
+        eventFullDto.setConfirmedRequests(participationRequestRepository.countByEventIdAndStatus(eventId, CONFIRMED));
         log.info("AdminEventService: обновление события с id={}, запрос: {}", eventId, adminUpdateEventRequest);
         return eventFullDto;
     }
@@ -68,9 +76,7 @@ public class AdminEventService {
         log.info("AdminEventService: публикация события с id={}", eventId);
         event.setState(State.PUBLISHED);
         event = eventRepository.save(event);
-        EventFullDto dto = EventMapper.toEventFullDto(event);
-        dto.setViews(statClient.getViewsSingleEvent(eventId));
-        return dto;
+        return EventMapper.toEventFullDto(event);
     }
 
     public EventFullDto rejectEvent(Long eventId) {
@@ -128,7 +134,7 @@ public class AdminEventService {
     }
 
     /**
-     * Возвращает время старта либо null
+     * Возвращает время старта из строки
      *
      * @param rangeStart принимает строку даты
      * @return LocalDateTime.class
@@ -144,7 +150,7 @@ public class AdminEventService {
     }
 
     /**
-     * Возвращает время окончания либо null
+     * Возвращает время окончания из строки
      *
      * @param rangeEnd принимает строку даты
      * @return LocalDateTime.class
@@ -157,6 +163,23 @@ public class AdminEventService {
             end = LocalDateTime.parse(rangeEnd, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
         return end;
+    }
+
+    /**
+     * @param events список событий
+     * @return List событий с полями confirmedRequests
+     */
+    private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
+        List<Event> eventsWithRequests = new ArrayList<>();
+        Map<Event, Long> countedRequests = participationRequestRepository
+                .findByStatusAndEvents(CONFIRMED, events).stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
+        for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
+            Event e = entry.getKey();
+            e.setConfirmedRequests(entry.getValue());
+            eventsWithRequests.add(e);
+        }
+        return eventsWithRequests;
     }
 
     private Event getEventFromDbOrThrow(Long id) {

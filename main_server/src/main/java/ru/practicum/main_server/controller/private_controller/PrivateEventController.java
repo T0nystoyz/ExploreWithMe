@@ -30,7 +30,7 @@ public class PrivateEventController {
     }
 
     @GetMapping()
-    List<EventShortDto> readEvents(@PathVariable long userId,
+    public List<EventShortDto> readEvents(@PathVariable long userId,
                                    @RequestParam(defaultValue = "0") int from,
                                    @RequestParam(defaultValue = "10") int size) {
         log.info(":::GET /users/{}/events чтение всех событий пользователя", userId);

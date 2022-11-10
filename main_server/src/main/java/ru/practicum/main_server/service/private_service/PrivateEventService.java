@@ -1,6 +1,7 @@
 package ru.practicum.main_server.service.private_service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +17,14 @@ import ru.practicum.main_server.model.dto.NewEventDto;
 import ru.practicum.main_server.model.dto.UpdateEventRequest;
 import ru.practicum.main_server.repository.CategoryRepository;
 import ru.practicum.main_server.repository.EventRepository;
+import ru.practicum.main_server.repository.ParticipationRequestRepository;
 import ru.practicum.main_server.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,27 +35,34 @@ public class PrivateEventService {
     private final StatisticClient statClient;
     private final CategoryRepository categoryRepository;
     private final PrivateLocationService locationService;
+    private final ParticipationRequestRepository participationRequestRepository;
 
+    @Autowired
     public PrivateEventService(EventRepository eventRepository,
                                StatisticClient statClient, UserRepository userRepository,
-                               CategoryRepository categoryRepository, PrivateLocationService locationService) {
+                               CategoryRepository categoryRepository, PrivateLocationService locationService,
+                               ParticipationRequestRepository participationRequestRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.statClient = statClient;
         this.categoryRepository = categoryRepository;
         this.locationService = locationService;
+        this.participationRequestRepository = participationRequestRepository;
     }
 
     public List<EventShortDto> readEvents(long userId, int from, int size) {
         log.info("PrivateEventService: чтение событий userId={}, from={}, size={}", userId, from, size);
         List<Event> e = statClient.getEventsWithViews(eventRepository.findAllByInitiatorId(userId,
                 PageRequest.of(from / size, size)).toList());
-        return e.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
+        List<Event> eventsWithRequests = getEventsWithConfirmedRequests(e);
+        return eventsWithRequests.stream().map(EventMapper::toEventShortDto).collect(Collectors.toList());
     }
 
     @Transactional
     public EventFullDto updateEvent(Long userId, UpdateEventRequest updateEventRequest) {
         Event event = getEventFromRequest(userId, updateEventRequest);
+        event.setConfirmedRequests(participationRequestRepository
+                .countByEventIdAndStatus(event.getId(), Status.CONFIRMED));
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
         eventFullDto.setViews(statClient.getViewsSingleEvent(updateEventRequest.getEventId()));
@@ -69,7 +80,6 @@ public class PrivateEventService {
         Category category = getCategoryFromDbOrThrow(newEventDto.getCategory());
         event.setCategory(category);
         event.setLocation(location);
-        event.setConfirmedRequests(0);
         event.setCreatedOn(LocalDateTime.now());
         event = eventRepository.save(event);
         EventFullDto eventFullDto = EventMapper.toEventFullDto(event);
@@ -82,6 +92,7 @@ public class PrivateEventService {
         log.info("PrivateEventService: чтение пользователем с id={} события с id={}", userId, eventId);
         Event event = eventRepository.getReferenceById(eventId);
         event.setViews(statClient.getViewsSingleEvent(eventId));
+        event.setConfirmedRequests(participationRequestRepository.countByEventIdAndStatus(eventId, Status.CONFIRMED));
         return EventMapper.toEventFullDto(event);
     }
 
@@ -139,6 +150,23 @@ public class PrivateEventService {
             event.setTitle(updateEventRequest.getTitle());
         }
         return event;
+    }
+
+    /**
+     * @param events список событий
+     * @return List событий с полями confirmedRequests
+     */
+    private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
+        List<Event> eventsWithRequests = new ArrayList<>();
+        Map<Event, Long> countedRequests = participationRequestRepository
+                .findByStatusAndEvents(Status.CONFIRMED, events).stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
+        for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
+            Event e = entry.getKey();
+            e.setConfirmedRequests(entry.getValue());
+            eventsWithRequests.add(e);
+        }
+        return eventsWithRequests;
     }
 
     /**
