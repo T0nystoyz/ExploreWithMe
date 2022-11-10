@@ -136,19 +136,6 @@ public class PublicEventService {
      * @param events список событий
      * @return List событий с полями confirmedRequests
      */
-    /*private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
-        List<Event> eventsWithRequests = new ArrayList<>();
-        Map<Event, Long> countedRequests = participationRequestRepository
-                .findByStatusAndEvent(Status.CONFIRMED, events).stream()
-                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
-        for (Map.Entry<Event, Long> entry : countedRequests.entrySet()) {
-            Event e = entry.getKey();
-            e.setConfirmedRequests(entry.getValue());
-            eventsWithRequests.add(e);
-        }
-        log.info("////eventsWithRequests{}",eventsWithRequests);
-        return eventsWithRequests;
-    }*/
     private List<Event> getEventsWithConfirmedRequests(List<Event> events) {
         Map<Long, Event> eventsWithRequests = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
         Map<Event, Long> countedRequests = participationRequestRepository

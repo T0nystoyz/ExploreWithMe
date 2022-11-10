@@ -92,8 +92,6 @@ public class PrivateParticipationRequestService {
             participation.setStatus(Status.REJECTED);
         }
         participation.setStatus(Status.CONFIRMED);
-        //event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-        //eventRepository.save(event);
         return ParticipationRequestMapper.toParticipationRequestDto(participationRepository.save(participation));
     }
 
