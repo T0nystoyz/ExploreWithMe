@@ -39,8 +39,8 @@ public class PublicEventService {
 
     @Autowired
     public PublicEventService(EventRepository eventRepository,
-                              StatisticClient statClient, ParticipationRequestRepository participationRequestRepository)
-    {
+                              StatisticClient statClient,
+                              ParticipationRequestRepository participationRequestRepository) {
         this.eventRepository = eventRepository;
         this.statClient = statClient;
         this.participationRequestRepository = participationRequestRepository;
