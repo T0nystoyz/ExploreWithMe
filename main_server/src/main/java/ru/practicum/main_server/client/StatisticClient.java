@@ -22,7 +22,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -109,10 +112,18 @@ public class StatisticClient {
         } catch (UnsupportedEncodingException e) {
             throw new InternalServerErrorException("неудачная кодировка");
         }
+
         if (!stats.isEmpty()) {
-            for (int i = 0; i < stats.size(); i++) {
-                events.get(i).setViews(stats.get(i).getHits());
+            Map<Long, Event> eventsMap = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
+            Map<String, Integer> statsMap = stats.stream()
+                    .collect(Collectors.toMap(ViewStats::getUri, ViewStats::getHits));
+            for (Map.Entry<String, Integer> entry : statsMap.entrySet()) {
+                long id = Long.parseLong(entry.getKey().substring(entry.getKey().length() - 1));
+                Event e = eventsMap.get(id);
+                e.setViews(entry.getValue());
+                eventsMap.replace(id, e);
             }
+            return new ArrayList<>(eventsMap.values());
         }
         return events;
     }
