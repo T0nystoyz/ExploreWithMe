@@ -22,7 +22,7 @@ public class NewEventDto {
     private Location location;
     private boolean paid;
     @Positive
-    private int participantLimit;
+    private Long participantLimit;
     private boolean requestModeration;
     private String state;
     @NotNull

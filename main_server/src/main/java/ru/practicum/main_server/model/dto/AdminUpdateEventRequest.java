@@ -20,7 +20,7 @@ public class AdminUpdateEventRequest {
     private Location location;
     private Boolean paid;
     @Positive
-    private Integer participantLimit;
+    private Long participantLimit;
     private Boolean requestModeration;
     private String title;
 }

@@ -19,6 +19,6 @@ public class UpdateEventRequest {
     private String description;
     private String eventDate;
     private Boolean paid;
-    private Integer participantLimit;
+    private Long participantLimit;
     private String title;
 }

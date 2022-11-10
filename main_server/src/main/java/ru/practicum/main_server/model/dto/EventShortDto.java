@@ -13,7 +13,7 @@ public class EventShortDto {
     private String annotation;
     private CategoryDto category;
     private Long confirmedRequests;
-    private Integer participationLimit;
+    private Long participationLimit;
     private String eventDate;
     private Long id;
     private UserShortDto initiator;
