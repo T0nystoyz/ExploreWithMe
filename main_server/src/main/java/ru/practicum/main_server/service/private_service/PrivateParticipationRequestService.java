@@ -81,7 +81,7 @@ public class PrivateParticipationRequestService {
     }
 
     @Transactional
-    public synchronized ParticipationRequestDto approveParticipationRequest(Long userId, Long eventId, Long requestId) {
+    public ParticipationRequestDto approveParticipationRequest(Long userId, Long eventId, Long requestId) {
         validateInitiator(userId, eventId);
         Event event = getEventFromDbOrThrow(eventId);
         ParticipationRequest participation = getRequestFromDbOrThrow(requestId);

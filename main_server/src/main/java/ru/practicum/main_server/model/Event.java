@@ -43,7 +43,7 @@ public class Event {
     private State state;
     @Column(name = "title", length = 254, nullable = false)
     private String title;
-    @Column(name = "confirmed_requests")
+    @Transient
     private Long confirmedRequests;
     @Transient
     private Integer views;

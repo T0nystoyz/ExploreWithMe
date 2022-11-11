@@ -115,14 +115,13 @@ public class StatisticClient {
 
         if (!stats.isEmpty()) {
             log.info("stats не пустой");
-            Map<Long, Event> eventsMap = events.stream().collect(Collectors.toMap(Event::getId, Function.identity()));
+            Map<String, Event> eventsMap = events.stream().collect(Collectors.toMap(e -> "/events/" + e.getId(),
+                    Function.identity()));
             Map<String, Integer> statsMap = stats.stream()
                     .collect(Collectors.toMap(ViewStats::getUri, ViewStats::getHits));
             for (Map.Entry<String, Integer> entry : statsMap.entrySet()) {
-                long id = Long.parseLong(entry.getKey().substring(entry.getKey().length() - 1));
-                Event e = eventsMap.get(id);
+                Event e = eventsMap.get(entry.getKey());
                 e.setViews(entry.getValue());
-                eventsMap.replace(id, e);
             }
             return new ArrayList<>(eventsMap.values());
         }
