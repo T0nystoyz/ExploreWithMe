@@ -36,5 +36,8 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     @Override
     List<Event> findAllById(Iterable<Long> ids);
+
+    @Query("select (count(e) > 0) from Event e where e.id = ?1 and e.state = ?2")
+    boolean existsByIdAndState(Long eventId, State state);
 }
 

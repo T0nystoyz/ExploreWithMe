@@ -81,6 +81,7 @@ public class AdminEventService {
         }
         log.info("AdminEventService: публикация события с id={}", eventId);
         event.setState(State.PUBLISHED);
+        event.setPublishedOn(LocalDateTime.now());
         event = eventRepository.save(event);
         return EventMapper.toEventFullDto(event);
     }

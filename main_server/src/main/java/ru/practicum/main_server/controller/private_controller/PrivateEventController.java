@@ -3,6 +3,7 @@ package ru.practicum.main_server.controller.private_controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.main_server.model.dto.*;
+import ru.practicum.main_server.service.private_service.PrivateCommentService;
 import ru.practicum.main_server.service.private_service.PrivateEventService;
 import ru.practicum.main_server.service.private_service.PrivateParticipationRequestService;
 
@@ -15,11 +16,13 @@ import java.util.List;
 public class PrivateEventController {
     private final PrivateEventService privateEventService;
     private final PrivateParticipationRequestService participationRequestService;
+    private final PrivateCommentService commentService;
 
     public PrivateEventController(PrivateEventService privateEventService,
-                                  PrivateParticipationRequestService participationService) {
+                                  PrivateParticipationRequestService participationService, PrivateCommentService commentService) {
         this.privateEventService = privateEventService;
         this.participationRequestService = participationService;
+        this.commentService = commentService;
     }
 
     @PostMapping
@@ -31,8 +34,8 @@ public class PrivateEventController {
 
     @GetMapping()
     public List<EventShortDto> readEvents(@PathVariable long userId,
-                                   @RequestParam(defaultValue = "0") int from,
-                                   @RequestParam(defaultValue = "10") int size) {
+                                          @RequestParam(defaultValue = "0") int from,
+                                          @RequestParam(defaultValue = "10") int size) {
         log.info(":::GET /users/{}/events чтение всех событий пользователя", userId);
         return privateEventService.readEvents(userId, from, size);
     }
@@ -82,5 +85,10 @@ public class PrivateEventController {
         log.info(":::PATCH /users/{}/events/{}/requests/{}/reject отклонить запрос на участие",
                 userId, eventId, reqId);
         return participationRequestService.rejectParticipationRequest(userId, eventId, reqId);
+    }
+
+    @GetMapping("/{eventId}/comments")
+    public List<CommentDto> readEventComments(@PathVariable Long userId, @PathVariable Long eventId) {
+        return commentService.readEventComments(eventId);
     }
 }
