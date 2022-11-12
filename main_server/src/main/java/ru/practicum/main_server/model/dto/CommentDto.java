@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Data
@@ -14,9 +14,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class CommentDto {
     private Long id;
-    @NotNull
+    @NotBlank
     private String text;
-    @NotNull
     private String authorName;
     private LocalDateTime created;
     private String state;

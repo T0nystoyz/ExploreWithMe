@@ -87,7 +87,7 @@ public class PrivateEventController {
         return participationRequestService.rejectParticipationRequest(userId, eventId, reqId);
     }
 
-    @GetMapping("/{eventId}/comments/")
+    @GetMapping("/{eventId}/comments")
     public List<CommentDto> readEventComments(@PathVariable Long userId, @PathVariable Long eventId) {
         return commentService.readEventComments(eventId);
     }

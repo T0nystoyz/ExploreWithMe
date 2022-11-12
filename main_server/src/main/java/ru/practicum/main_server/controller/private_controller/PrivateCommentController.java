@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.main_server.model.dto.CommentDto;
 import ru.practicum.main_server.service.private_service.PrivateCommentService;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping(path = "/users/{userId}/comments")
 @Slf4j
@@ -18,8 +20,8 @@ public class PrivateCommentController {
     @PostMapping
     public CommentDto createComment(@PathVariable Long userId,
                                     @RequestParam Long eventId,
-                                    @RequestBody CommentDto commentDto) {
-        log.info(":::PATCH /users/{}/comments создание комментария на событие c id={} ", userId, eventId);
+                                    @RequestBody @Valid CommentDto commentDto) {
+        log.info(":::POST /users/{}/comments создание комментария на событие c id={} ", userId, eventId);
         return commentService.createComment(userId, eventId, commentDto);
     }
 

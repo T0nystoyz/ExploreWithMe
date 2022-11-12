@@ -9,6 +9,7 @@ import ru.practicum.main_server.exception.NotFoundException;
 import ru.practicum.main_server.mapper.CommentMapper;
 import ru.practicum.main_server.model.Comment;
 import ru.practicum.main_server.model.Event;
+import ru.practicum.main_server.model.State;
 import ru.practicum.main_server.model.User;
 import ru.practicum.main_server.model.dto.CommentDto;
 import ru.practicum.main_server.repository.CommentRepository;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static ru.practicum.main_server.model.CommentState.NEW;
-import static ru.practicum.main_server.model.State.PUBLISHED;
 
 @Slf4j
 @Service
@@ -41,11 +41,12 @@ public class PrivateCommentService {
     public CommentDto createComment(long userId, long eventId, CommentDto commentDto) {
         checkEventPublished(eventId);
         Comment comment = CommentMapper.toComment(commentDto);
+        log.info("комментарий: {}.", commentDto);
         comment.setEvent(getEventFromDbOrThrow(eventId));
         comment.setAuthor(getUserFromDbOrThrow(userId));
         comment.setState(NEW);
         comment.setCreated(LocalDateTime.now());
-        log.info("комментарий создан {}.", commentDto.getText());
+        log.info("комментарий создан {}.", comment);
         return CommentMapper.toCommentDto(commentRepository.save(comment));
     }
 
@@ -84,7 +85,7 @@ public class PrivateCommentService {
     }
 
     private void checkEventPublished(long eventId) {
-        if (!eventRepository.getReferenceById(eventId).getState().equals(PUBLISHED)) {
+        if (!eventRepository.existsByIdAndState(eventId, State.PUBLISHED)) {
             throw new BadRequestException("Нельзя комментировать неопубликованное событие");
         }
     }

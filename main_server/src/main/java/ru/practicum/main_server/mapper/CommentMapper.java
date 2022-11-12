@@ -1,7 +1,6 @@
 package ru.practicum.main_server.mapper;
 
 import ru.practicum.main_server.model.Comment;
-import ru.practicum.main_server.model.CommentState;
 import ru.practicum.main_server.model.dto.CommentDto;
 
 import java.time.LocalDateTime;
@@ -13,7 +12,7 @@ public class CommentMapper {
         commentDto.setAuthorName(comment.getAuthor().getName());
         commentDto.setText(comment.getText());
         commentDto.setCreated(comment.getCreated());
-        commentDto.setState(commentDto.getState());
+        commentDto.setState(comment.getState().toString());
         return commentDto;
     }
 
@@ -22,7 +21,6 @@ public class CommentMapper {
         comment.setId(commentDto.getId());
         comment.setText(commentDto.getText());
         comment.setCreated(LocalDateTime.now());
-        comment.setState(CommentState.valueOf(commentDto.getState()));
         return comment;
     }
 

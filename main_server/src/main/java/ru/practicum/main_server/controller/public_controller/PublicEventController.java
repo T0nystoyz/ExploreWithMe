@@ -49,7 +49,7 @@ public class PublicEventController {
         return publicEventService.readEvent(id);
     }
 
-    @GetMapping("/{eventId}/comments/")
+    @GetMapping("/{eventId}/comments")
     public List<CommentDto> readEventComments(@PathVariable Long eventId) {
         log.info(":::GET /events/{}/comments чтение комментариев по id события", eventId);
         return commentService.readEventComments(eventId);
