@@ -61,8 +61,9 @@ public class PrivateCommentService {
         return CommentMapper.toCommentDto(commentRepository.save(updatedComment));
     }
 
-    public List<CommentDto> readEventComments(Long eventId){
-        return commentRepository.findByEventId(eventId).stream().map(CommentMapper::toCommentDto).collect(Collectors.toList());
+    public List<CommentDto> readEventComments(Long eventId) {
+        return commentRepository.findByEventId(eventId).stream().map(CommentMapper::toCommentDto)
+                .collect(Collectors.toList());
     }
 
     private void checkAuthor(long userId, long commentId) {
@@ -93,4 +94,3 @@ public class PrivateCommentService {
                 String.format("PrivateCommentService: пользователя по id=%d нет в базе", id)));
     }
 }
-

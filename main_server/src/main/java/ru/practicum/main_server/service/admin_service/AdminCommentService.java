@@ -28,10 +28,11 @@ public class AdminCommentService {
         this.commentRepository = commentRepository;
     }
 
-    public List<CommentDto> readComments(CommentState state, long eventId){
+    public List<CommentDto> readComments(CommentState state, long eventId) {
         return commentRepository.findByStateAndEventId(state, eventId).stream().map(CommentMapper::toCommentDto)
                 .collect(Collectors.toList());
     }
+
     public void deleteComment(long commentId) {
         commentRepository.delete(getCommentFromDbOrThrow(commentId));
     }

@@ -34,8 +34,8 @@ public class PrivateEventController {
 
     @GetMapping()
     public List<EventShortDto> readEvents(@PathVariable long userId,
-                                   @RequestParam(defaultValue = "0") int from,
-                                   @RequestParam(defaultValue = "10") int size) {
+                                          @RequestParam(defaultValue = "0") int from,
+                                          @RequestParam(defaultValue = "10") int size) {
         log.info(":::GET /users/{}/events чтение всех событий пользователя", userId);
         return privateEventService.readEvents(userId, from, size);
     }
@@ -88,7 +88,7 @@ public class PrivateEventController {
     }
 
     @GetMapping("/{eventId}/comments/")
-    public List<CommentDto> readEventComments(@PathVariable Long userId, @PathVariable Long eventId){
+    public List<CommentDto> readEventComments(@PathVariable Long userId, @PathVariable Long eventId) {
         return commentService.readEventComments(eventId);
     }
 }

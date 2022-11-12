@@ -25,15 +25,15 @@ public class PublicEventController {
 
     @GetMapping()
     public List<EventShortDto> readEvents(@RequestParam(required = false) String text,
-                                   @RequestParam(required = false) List<Long> categories,
-                                   @RequestParam(required = false) Boolean paid,
-                                   @RequestParam(required = false) String rangeStart,
-                                   @RequestParam(required = false) String rangeEnd,
-                                   @RequestParam(required = false) Boolean onlyAvailable,
-                                   @RequestParam(required = false) String sort,
-                                   @RequestParam(defaultValue = "0") int from,
-                                   @RequestParam(defaultValue = "10") int size,
-                                   HttpServletRequest request) {
+                                          @RequestParam(required = false) List<Long> categories,
+                                          @RequestParam(required = false) Boolean paid,
+                                          @RequestParam(required = false) String rangeStart,
+                                          @RequestParam(required = false) String rangeEnd,
+                                          @RequestParam(required = false) Boolean onlyAvailable,
+                                          @RequestParam(required = false) String sort,
+                                          @RequestParam(defaultValue = "0") int from,
+                                          @RequestParam(defaultValue = "10") int size,
+                                          HttpServletRequest request) {
         log.info(":::GET /events получение списка событий по параметрам: text={}, categories={}, paid={}, " +
                         "rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
@@ -50,7 +50,7 @@ public class PublicEventController {
     }
 
     @GetMapping("/{eventId}/comments/")
-    public List<CommentDto> readEventComments(@PathVariable Long eventId){
+    public List<CommentDto> readEventComments(@PathVariable Long eventId) {
         log.info(":::GET /events/{}/comments чтение комментариев по id события", eventId);
         return commentService.readEventComments(eventId);
     }

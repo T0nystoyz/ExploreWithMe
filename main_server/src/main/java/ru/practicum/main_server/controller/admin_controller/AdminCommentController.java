@@ -20,7 +20,7 @@ public class AdminCommentController {
 
     @GetMapping
     public List<CommentDto> readComments(@RequestParam CommentState state,
-                                         @RequestParam long eventId){
+                                         @RequestParam long eventId) {
         return commentService.readComments(state, eventId);
     }
 
