@@ -4,7 +4,7 @@
 Возможный аналог - мероприятия VK. 
 
 ## Стек
-Docker 2.2, Java 17, Maven 4.0.0, PostgreSQL 42.5.1, Spring Boot 2.7.2, RestTemplate, JUnit 
+Docker 2.2, Java 17, Maven 4.0.0, PostgreSQL 14 alpine, Spring Boot 2.7.2, RestTemplate, JUnit 
 
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original-wordmark.svg" title="Spring" alt="Spring" width="30" height="30"/>&nbsp;
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original-wordmark.svg" title="postgresql" alt="postgresql" width="30" height="30"/>&nbsp;
