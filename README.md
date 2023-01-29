@@ -6,7 +6,7 @@
 ## Стек
 Docker 2.2, Java 17, Maven 4.0.0, PostgreSQL 14 alpine, Spring Boot 2.7.2, RestTemplate, JUnit 
 
-  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original-wordmark.svg" title="Spring" alt="Spring" width="30" height="30"/>&nbsp;
+  <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original-wordmark.svg" title="spring" alt="spring" width="30" height="30"/>&nbsp;
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original-wordmark.svg" title="postgresql" alt="postgresql" width="30" height="30"/>&nbsp;
   <img src="https://voyager.postman.com/logo/postman-logo-orange-stacked.svg" title="postman" alt="postman" width="40" height="30"/>&nbsp;
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original-wordmark.svg" title="docker" alt="docker" width="30" height="30"/>&nbsp;
